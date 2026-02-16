@@ -1,0 +1,90 @@
+"use client";
+
+import { useState } from "react";
+import { Menu, LogOut, User } from "lucide-react";
+import { Sidebar, type SidebarItem } from "./Sidebar";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  sidebarItems: SidebarItem[];
+  sidebarTitle: string;
+  topbarLinks?: { label: string; href: string }[];
+  userName?: string;
+}
+
+export function DashboardLayout({
+  children,
+  sidebarItems,
+  sidebarTitle,
+  topbarLinks = [],
+  userName = "User",
+}: DashboardLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar items={sidebarItems} title={sidebarTitle} />
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/50"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <div
+            className="w-64"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Sidebar items={sidebarItems} title={sidebarTitle} />
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <header className="h-14 sm:h-16 bg-white border-b border-border flex items-center justify-between px-3 sm:px-4 md:px-6">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              className="lg:hidden p-2.5"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <nav className="hidden md:flex items-center gap-3 md:gap-6">
+              {topbarLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
+              {userName}
+            </span>
+            <div className="w-8 h-8 rounded-full bg-cvision-green flex items-center justify-center">
+              <User className="w-4 h-4 text-white" />
+            </div>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-3 sm:p-4 md:p-6">{children}</main>
+      </div>
+    </div>
+  );
+}
