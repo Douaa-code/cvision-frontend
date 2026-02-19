@@ -147,12 +147,7 @@ export default function CandidateRegisterPage() {
         </Link>
         <Card>
           <CardHeader className="text-center pb-2">
-            <Link
-              href="/"
-              className="text-2xl font-bold text-cvision-green mb-2 inline-block"
-            >
-              CVision
-            </Link>
+            
             <CardTitle className="text-xl">Create Candidate Account</CardTitle>
             <p className="text-sm text-muted-foreground">
               Fill in your details to get started
