@@ -27,12 +27,12 @@ const features = [
   {
     icon: Flag,
     title: "Localized for Algeria",
-    desc: "Built specifically for the Algerian market with support for all 58 wilayas.",
+    desc: "Built specifically for the Algerian market with support for all 69 wilayas.",
   },
   {
     icon: Sparkles,
     title: "AI-Powered Matching",
-    desc: "Smart algorithms match candidates to the most relevant job opportunities.",
+    desc: "Automatic CV analysis and smart job recommendations based on compatibility.",
   },
   {
     icon: ShieldCheck,
@@ -47,12 +47,12 @@ const features = [
   {
     icon: BadgeCheck,
     title: "Skill Validation",
-    desc: "Validate your skills through QCM assessments and earn certifications.",
+    desc: "Domain-specific QCM tests to validate your skills and knowledge.",
   },
   {
     icon: Lock,
     title: "Data Privacy & Security",
-    desc: "Your data is protected with industry-standard security measures.",
+    desc: "Protectiong user data according to fundamental security practices.",
   },
 ];
 
@@ -60,22 +60,22 @@ const steps = [
   {
     icon: User,
     title: "Complete Profile",
-    desc: "Fill in your details, upload your CV, and add your skills.",
+    desc: "Register as a job seeker or company and complete your profile.",
   },
   {
     icon: Brain,
     title: "AI Analysis",
-    desc: "Our AI analyzes your profile and matches you with relevant jobs.",
+    desc: "Our AI analyzes your CV and matches you with relevant opportunities.",
   },
   {
     icon: ClipboardList,
     title: "Apply & Test",
-    desc: "Apply to jobs and take required QCM assessments.",
+    desc: "Apply for jobs and complete required skills tests.",
   },
   {
     icon: Trophy,
     title: "Get Hired & Train",
-    desc: "Accept offers and start your company training journey.",
+    desc: "Get accepted and access training programs to excel in your new role.",
   },
 ];
 
@@ -165,8 +165,7 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="hero-subtitle text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            AI-powered recruitment platform that matches the right candidates
-            with the right opportunities across all 58 wilayas.
+            AI-powered recruitment platform with smart job matching , CV analysis , online tests , and training programs.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-12">
             <Link href="/jobs" className="hero-cta">
@@ -336,6 +335,7 @@ export default function HomePage() {
             <Link href="/register/candidate">
               <Button
                 size="lg"
+                variant="outline"
                 className="h-12 px-8 text-base bg-white text-cvision-green hover:bg-gray-100"
               >
                 Create Account as Candidate
@@ -345,7 +345,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="h-12 px-8 text-base border-white text-white hover:bg-white/10"
+                className="h-12 px-8 text-base bg-white text-cvision-green hover:bg-gray-100"
               >
                 Create Account as Company
               </Button>

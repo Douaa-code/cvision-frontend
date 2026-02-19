@@ -5,10 +5,14 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
+
 
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
 
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-emerald-500 to-blue-500 shadow-md">
@@ -30,18 +34,28 @@ export function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link
-              href="/"
-              className="text-sm font-medium text-foreground hover:text-cvision-green transition-colors"
-            >
-              Home
-            </Link>
-            <Link
-              href="/about"
-              className="text-sm font-medium text-muted-foreground hover:text-cvision-green transition-colors"
-            >
-              About Us
-            </Link>
+            <Link 
+            href="/" 
+            className={`text-sm font-medium transition-colors ${
+              pathname=="/"
+              ? "text-black"
+              : "text-white/80 hover:text-white"
+              }`}
+              >
+                Home
+                </Link>
+
+            <Link 
+            href="/about"
+            className={`text-sm font-medium transition-colors ${
+              pathname === "/about"
+              ? "text-black"
+              : "text-white/80 hover:text-white"
+              }`}
+              >
+                About Us
+                </Link>
+
           </nav>
 
           {/* Desktop Actions */}
