@@ -66,10 +66,10 @@ export function Header() {
               </Button>
             </Link>
             <Link href="/register/candidate">
-              <Button size="sm">Register as a condidate</Button>
+              <Button size="sm">Register as condidate</Button>
             </Link>
             <Link href="/register/company">
-              <Button size="sm">Register as a company</Button>
+              <Button size="sm">Register as company</Button>
             </Link>
           </div>
 
@@ -111,10 +111,10 @@ export function Header() {
                   </Button>
                 </Link>
                 <Link href="/register/candidate">
-              <Button size="sm"className="w-full">Register as a condidate</Button>
+              <Button size="sm"className="w-full">Register as condidate</Button>
             </Link>
             <Link href="/register/company">
-              <Button size="sm" className="w-full">Register as a company</Button>
+              <Button size="sm" className="w-full">Register as company</Button>
             </Link>
               </div>
             </nav>
