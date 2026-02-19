@@ -43,7 +43,10 @@ export function Header() {
               </Button>
             </Link>
             <Link href="/register/candidate">
-              <Button size="sm">Get Started</Button>
+              <Button size="sm">Register as a condidat</Button>
+            </Link>
+            <Link href="/register/company">
+              <Button size="sm">Register as a company</Button>
             </Link>
           </div>
 
