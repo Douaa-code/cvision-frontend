@@ -4,19 +4,28 @@ import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
+
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-border">
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-emerald-500 to-blue-500 shadow-md">
+
+
+
+
       <div className="max-w-[1280px] mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-cvision-green">
-              CVision
-            </span>
+            <Image 
+            src="/logo/logo_cvision_blanc.png" 
+            alt="logo" 
+            width={120} 
+            height={40}
+            />
           </Link>
 
           {/* Desktop Nav */}
@@ -43,7 +52,7 @@ export function Header() {
               </Button>
             </Link>
             <Link href="/register/candidate">
-              <Button size="sm">Register as a condidat</Button>
+              <Button size="sm">Register as a condidate</Button>
             </Link>
             <Link href="/register/company">
               <Button size="sm">Register as a company</Button>
@@ -88,10 +97,11 @@ export function Header() {
                   </Button>
                 </Link>
                 <Link href="/register/candidate">
-                  <Button size="sm" className="w-full">
-                    Get Started
-                  </Button>
-                </Link>
+              <Button size="sm"className="w-full">Register as a condidate</Button>
+            </Link>
+            <Link href="/register/company">
+              <Button size="sm" className="w-full">Register as a company</Button>
+            </Link>
               </div>
             </nav>
           </div>
