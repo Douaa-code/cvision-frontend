@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -73,14 +75,16 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
+        <Link
+        href="/"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Link>
+
         <Card>
           <CardHeader className="text-center pb-2">
-            <Link
-              href="/"
-              className="text-2xl font-bold text-cvision-green mb-2 inline-block"
-            >
-              CVision
-            </Link>
             <CardTitle className="text-xl">Welcome Back</CardTitle>
             <p className="text-sm text-muted-foreground">
               Sign in to your account
@@ -164,6 +168,7 @@ export default function LoginPage() {
                   "Sign In"
                 )}
               </Button>
+              
             </form>
 
             {/* Demo Accounts */}
@@ -184,12 +189,17 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
+              <p>Don&apos;t have an account?</p>
               <Link
                 href="/register/candidate"
-                className="text-cvision-green hover:underline font-medium"
+                className="block mt-2 text-cvision-green hover:underline font-medium">
+                Register as condidate
+              </Link>
+              <Link
+                href="/register/company"
+                className="block mt-1 text-cvision-green hover:underline font-medium"
               >
-                Sign up
+                Register as company
               </Link>
             </div>
           </CardContent>

@@ -26,32 +26,32 @@ const keyFeatures = [
   {
     icon: Sparkles,
     title: "AI-Powered Matching",
-    desc: "Smart algorithms for precise candidate-job matching based on skills, experience, and preferences.",
+    desc: "Our advanced AI analyzes CVs and matches candidates with job opportunities based on compatibility.",
   },
   {
     icon: ShieldCheck,
     title: "Verified Companies",
-    desc: "Document verification (RC, NIF) ensures only legitimate businesses can post job offers.",
+    desc: "All companies are verified through document review to ensure authenticity.",
   },
   {
     icon: Flag,
     title: "Localized for Algeria",
-    desc: "Full support for all 58 wilayas, local salary ranges in DA, and Algerian contract types.",
+    desc: "Support for algerian wilayas, contract types (CDI, CDD? Internship, Freelance), and local business practices.",
   },
   {
     icon: BadgeCheck,
     title: "Skill Validation",
-    desc: "QCM-based assessments to validate professional competencies and prove your expertise.",
+    desc: "Domain-specific QCM tests to validate your skills and knowledge.",
   },
   {
     icon: BookOpen,
     title: "Training Programs",
-    desc: "Company-provided onboarding modules with videos, courses, and quizzes for accepted candidates.",
+    desc: "Post-recruitment training content to help candidates excel in their new roles.",
   },
   {
     icon: MessageSquare,
     title: "Direct Communication",
-    desc: "Seamless interaction between candidates and companies throughout the recruitment process.",
+    desc: "Integrated chat for seamless communication.",
   },
 ];
 
@@ -95,9 +95,7 @@ export default function AboutPage() {
               About <span className="text-cvision-green">CVision</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-              CVision is revolutionizing the recruitment landscape in Algeria by
-              leveraging artificial intelligence to connect talented
-              professionals with verified companies across all 58 wilayas.
+              CVision is a cuttin-edge recruitment solution designed specifically for the Algerian market . Our mission is to digitalize and modernize the recruitment progress , connecting talented job seekers with verified companies across Algeria .
             </p>
           </motion.div>
         </div>
@@ -117,16 +115,9 @@ export default function AboutPage() {
                 Our Vision
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                We envision a future where every Algerian professional can find
-                meaningful employment through a transparent, AI-driven platform
-                that ensures fair matching and verified opportunities.
+                To become the leading recruitment platform in algeria, providing innovative solutions that leverage artificial intelligence to match candidates with the right opportunities, while ensuring transparency, efficiency, a,d quality in the hiring process .
               </p>
-              <p className="text-muted-foreground leading-relaxed">
-                Our mission is to bridge the gap between talented job seekers and
-                growing companies across Algeria, using technology to create a
-                trustworthy and efficient recruitment ecosystem that benefits
-                everyone.
-              </p>
+              
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 30 }}
@@ -281,6 +272,7 @@ export default function AboutPage() {
             <Link href="/register/candidate">
               <Button
                 size="lg"
+                variant="outline"
                 className="h-12 px-8 text-base bg-white text-cvision-green hover:bg-gray-100"
               >
                 Get Started as Candidate
@@ -290,7 +282,7 @@ export default function AboutPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="h-12 px-8 text-base border-white text-white hover:bg-white/10"
+                className="h-12 px-8 text-base bg-white text-cvision-green hover:bg-gray-100"
               >
                 Get Started as Employer
               </Button>

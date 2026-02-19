@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { WILAYAS, getPostalCodeByWilaya } from "@/lib/constants/wilayas";
 import { DomainEnum } from "@/types/enums";
+import { ArrowLeft } from "lucide-react";
 
 // Step 1 schema
 const step1Schema = z.object({
@@ -73,6 +74,7 @@ const STEPS = [
   { icon: FileText, label: "Documents" },
   { icon: UserCog, label: "Admin Account" },
 ];
+
 
 export default function CompanyRegisterPage() {
   const router = useRouter();
@@ -167,14 +169,16 @@ export default function CompanyRegisterPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-2xl"
       >
+        <Link
+        href="/"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Link>
         <Card>
           <CardHeader className="text-center pb-2">
-            <Link
-              href="/"
-              className="text-2xl font-bold text-cvision-green mb-2 inline-block"
-            >
-              CVision
-            </Link>
+            
             <CardTitle className="text-xl">Register Your Company</CardTitle>
             <p className="text-sm text-muted-foreground">
               3-step verification process

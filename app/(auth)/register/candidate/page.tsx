@@ -26,6 +26,7 @@ import {
 import { Eye, EyeOff, Loader2, X } from "lucide-react";
 import { WILAYAS, getPostalCodeByWilaya } from "@/lib/constants/wilayas";
 import { DomainEnum, EducationEnum, ExperienceEnum } from "@/types/enums";
+import { ArrowLeft } from "lucide-react";
 
 const candidateSchema = z
   .object({
@@ -137,6 +138,13 @@ export default function CandidateRegisterPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-2xl"
       >
+        <Link
+        href="/"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Link>
         <Card>
           <CardHeader className="text-center pb-2">
             <Link
