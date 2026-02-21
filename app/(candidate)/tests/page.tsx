@@ -22,7 +22,7 @@ import {
 
 const stats = [
   { label: "Total Tests", value: "12", icon: ClipboardCheck, color: "text-cvision-blue" },
-  { label: "Pending Tests", value: "2", icon: Clock, color: "text-cvision-yellow" },
+  { label: "Not Started Tests", value: "2", icon: Clock, color: "text-cvision-yellow" },
   { label: "Highest Score", value: "88%", icon: Trophy, color: "text-cvision-green" },
 ];
 
@@ -58,14 +58,14 @@ export default function TestsPage() {
         })}
       </motion.div>
 
-      {/* Pending Tests */}
+      {/* Not Started Tests */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className="mb-8"
       >
-        <h2 className="text-lg font-semibold mb-4">Pending Tests</h2>
+        <h2 className="text-lg font-semibold mb-4">Not Started Tests</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {mockTests.map((test) => (
             <Card key={test.id}>
