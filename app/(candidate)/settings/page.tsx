@@ -15,11 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { User, Shield, AlertTriangle, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { User, Bell, Shield, AlertTriangle, Check } from "lucide-react";
 import { mockCandidate } from "@/lib/mock-data/candidate";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: User },
+  { id: "notifications", label: "Notifications", icon: Bell },
   { id: "security", label: "Security", icon: Shield },
   { id: "account", label: "Account", icon: AlertTriangle },
 ] as const;
@@ -36,6 +38,11 @@ export default function SettingsPage() {
   );
   const [email, setEmail] = useState(mockCandidate.email);
   const [phone, setPhone] = useState(mockCandidate.phoneNumber);
+
+  // Notifications state
+  const [emailAppAccepted, setEmailAppAccepted] = useState(true);
+  const [emailAppRejected, setEmailAppRejected] = useState(true);
+  const [emailNewJobMatch, setEmailNewJobMatch] = useState(false);
 
   // Security state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -152,6 +159,45 @@ export default function SettingsPage() {
 
             <div className="flex justify-end">
               <Button onClick={handleSaveProfile}>Save Changes</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Notifications Tab */}
+      {activeTab === "notifications" && (
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            <div>
+              <h2 className="font-semibold text-lg mb-1">Notification Preferences</h2>
+              <p className="text-sm text-muted-foreground">Configure email notifications.</p>
+            </div>
+            <Separator />
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Checkbox id="notifAccepted" checked={emailAppAccepted} onCheckedChange={(c) => setEmailAppAccepted(c === true)} />
+                <div>
+                  <Label htmlFor="notifAccepted" className="cursor-pointer">Application Accepted</Label>
+                  <p className="text-xs text-muted-foreground">Get notified when a company accepts your application.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Checkbox id="notifRejected" checked={emailAppRejected} onCheckedChange={(c) => setEmailAppRejected(c === true)} />
+                <div>
+                  <Label htmlFor="notifRejected" className="cursor-pointer">Application Rejected</Label>
+                  <p className="text-xs text-muted-foreground">Get notified when a company declines your application.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Checkbox id="notifJobMatch" checked={emailNewJobMatch} onCheckedChange={(c) => setEmailNewJobMatch(c === true)} />
+                <div>
+                  <Label htmlFor="notifJobMatch" className="cursor-pointer">New Job Match</Label>
+                  <p className="text-xs text-muted-foreground">Get notified when a new job matches your profile.</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={handleSaveProfile}>Save Preferences</Button>
             </div>
           </CardContent>
         </Card>
