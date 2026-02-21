@@ -74,7 +74,7 @@ export default function ProfilePage() {
                 <div className="w-24 h-24 rounded-full bg-cvision-container border-2 border-border flex items-center justify-center">
                   <User className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <Button variant="outline" size="sm">Change Photo</Button>
+                <Button variant="outline" size="sm">Change Picture</Button>
               </div>
               {/* Fields */}
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
