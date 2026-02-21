@@ -156,8 +156,13 @@ export default function JobSearchPage() {
           </SelectContent>
         </Select>
 
-        <Button variant="ghost" size="sm" onClick={resetFilters}>
-          Reset
+       <Button 
+       variant="ghost" 
+       size="sm" 
+       onClick={resetFilters}
+       className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
+       >
+        Reset
         </Button>
       </div>
 

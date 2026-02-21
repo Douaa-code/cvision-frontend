@@ -107,7 +107,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label>Wilaya</Label>
                 <Select value={candidate.wilaya} onValueChange={(v) => updateField("wilaya", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {WILAYAS.map((w) => (
                       <SelectItem key={w.code} value={w.name}>{w.code} - {w.name}</SelectItem>
@@ -135,7 +135,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label>Highest Degree</Label>
                 <Select value={candidate.educationLevel} onValueChange={(v) => updateField("educationLevel", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full" ><SelectValue/></SelectTrigger>
                   <SelectContent>
                     {Object.values(EducationEnum).map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                   </SelectContent>
@@ -144,7 +144,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label>Field of Study</Label>
                 <Select value={candidate.fieldOfStudy} onValueChange={(v) => updateField("fieldOfStudy", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.values(DomainEnum).map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                   </SelectContent>
@@ -170,7 +170,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label>Years of Experience</Label>
                 <Select value={candidate.yearsOfExperience} onValueChange={(v) => updateField("yearsOfExperience", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.values(ExperienceEnum).map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
                   </SelectContent>
