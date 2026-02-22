@@ -145,7 +145,7 @@ export default function CompanyProfilePage() {
                   <Label>Activity Domain</Label>
                   {editing ? (
                     <Select value={domain} onValueChange={setDomain}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {DOMAINS.map((d) => (
                           <SelectItem key={d} value={d}>{d}</SelectItem>
@@ -188,7 +188,7 @@ export default function CompanyProfilePage() {
                   <Label>Wilaya</Label>
                   {editing ? (
                     <Select value={wilaya} onValueChange={handleWilayaChange}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {getWilayaOptions().map((w) => (
                           <SelectItem key={w.value} value={w.value}>{w.label}</SelectItem>
