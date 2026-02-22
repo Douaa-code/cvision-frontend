@@ -51,6 +51,11 @@ export default function ApplicantsPage() {
   const filtered = applications.filter((app) => {
     if (filterJob !== "all" && app.jobId !== filterJob) return false;
     if (filterStatus !== "all" && app.currentStatus !== filterStatus) return false;
+    if (filterCompatibility !== "all") {
+      if (filterCompatibility === "u49" && app.compatibilityScore > 49) return false;
+      if (filterCompatibility === "u20" && app.compatibilityScore > 20) return false;
+      if (filterCompatibility !== "u49" && filterCompatibility !== "u20" && app.compatibilityScore < Number(filterCompatibility)) return false;
+    }
     return true;
   });
 
