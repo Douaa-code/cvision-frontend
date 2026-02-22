@@ -36,6 +36,7 @@ const hasAcceptedOffers = mockApplications.some(
 export default function CandidateDashboard() {
   const recentApplications = mockApplications.slice(0, 5);
   const recommendedJobs = mockJobs.slice(0, 3);
+  const savedJobs = mockJobs.filter((job) => job.saved);
 
   return (
     <div>
@@ -94,6 +95,26 @@ export default function CandidateDashboard() {
           </div>
         </motion.div>
       )}
+
+      {/* Saved Jobs */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mb-8"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Saved Jobs</h2>
+          <Link href="/jobs" className="text-sm text-cvision-green hover:underline">
+            Browse all jobs
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {savedJobs.map((job) => (
+            <JobCard key={job.id} job={job} />
+          ))}
+        </div>
+      </motion.div>
 
       {/* Recent Applications */}
       <motion.div
