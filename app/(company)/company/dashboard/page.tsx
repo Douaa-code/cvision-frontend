@@ -18,11 +18,10 @@ import {
   ClipboardList,
   Clock,
   UserCheck,
-  TrendingUp,
   ArrowRight,
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { mockCompany, mockCompanyApplications } from "@/lib/mock-data/company";
+import { mockCompanyApplications } from "@/lib/mock-data/company";
 import { mockJobs } from "@/lib/mock-data/jobs";
 import {
   staggerContainerVariants,
@@ -158,72 +157,6 @@ export default function CompanyDashboard() {
           </Card>
         </motion.div>
 
-        {/* Quick Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="h-full">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Company Overview</h2>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-cvision-container rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-cvision-green" />
-                  <div>
-                    <p className="text-sm font-medium">Acceptance Rate</p>
-                    <p className="text-2xl font-bold">
-                      {Math.round(
-                        (acceptedApps.length /
-                          mockCompanyApplications.length) *
-                          100
-                      )}
-                      %
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-white border border-border rounded-lg text-center">
-                    <p className="text-xs text-muted-foreground">
-                      Avg. Compatibility
-                    </p>
-                    <p className="text-xl font-bold">
-                      {Math.round(
-                        mockCompanyApplications.reduce(
-                          (acc, a) => acc + a.compatibilityScore,
-                          0
-                        ) / mockCompanyApplications.length
-                      )}
-                      %
-                    </p>
-                  </div>
-                  <div className="p-4 bg-white border border-border rounded-lg text-center">
-                    <p className="text-xs text-muted-foreground">Tests Taken</p>
-                    <p className="text-xl font-bold">
-                      {
-                        mockCompanyApplications.filter(
-                          (a) =>
-                            a.testStatus &&
-                            a.testStatus !== "Not Started"
-                        ).length
-                      }
-                    </p>
-                  </div>
-                </div>
-                <div className="p-4 bg-cvision-green-bg rounded-lg">
-                  <p className="text-sm font-medium text-cvision-green mb-1">
-                    Company Status
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Your company is <strong>verified</strong> and active on
-                    CVision since{" "}
-                    {mockCompany.registrationDate.toLocaleDateString()}.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
 
       {/* Recent Applications */}
