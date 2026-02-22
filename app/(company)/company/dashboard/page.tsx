@@ -82,8 +82,8 @@ export default function CompanyDashboard() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <motion.div key={stat.label} variants={staggerItemVariants}>
-              <Card>
+            <motion.div key={stat.label} variants={staggerItemVariants} className="h-full">
+              <Card className="h-full">
                 <CardContent className="p-6 flex items-center gap-4">
                   <div
                     className={`p-3 rounded-lg bg-cvision-container ${stat.color}`}
