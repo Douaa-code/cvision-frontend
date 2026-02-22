@@ -126,6 +126,16 @@ export default function UsersManagementPage() {
                 <SelectItem value="company">Company</SelectItem>
               </SelectContent>
             </Select>
+            {(search !== "" || filterRole !== "all") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setSearch(""); setFilterRole("all"); }}
+                className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                Reset
+              </Button>
+            )}
             <span className="text-sm text-muted-foreground">{filtered.length} users</span>
           </div>
         </CardContent>

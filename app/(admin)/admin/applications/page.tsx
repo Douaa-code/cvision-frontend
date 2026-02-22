@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -116,6 +117,16 @@ export default function AdminApplicationsPage() {
                 <SelectItem value="Rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
+            {(search !== "" || filterStatus !== "all") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setSearch(""); setFilterStatus("all"); }}
+                className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                Reset
+              </Button>
+            )}
             <span className="text-sm text-muted-foreground">{filtered.length} applications</span>
           </div>
         </CardContent>
