@@ -1,13 +1,12 @@
 import { cn } from "@/lib/utils";
 
-type StatusType = "Accepted" | "Pending" | "Rejected" | "Approved" | "Active" | "Closed" | "Passed" | "Failed" | "Completed" | "Not Started";
+type StatusType = "Accepted" | "Pending" | "Rejected" | "Approved" | "Active" | "Closed" | "Passed" | "Failed" | "Not Started";
 
 const statusStyles: Record<StatusType, string> = {
   Accepted: "bg-[#CCF4EA] text-[#00C897]",
   Approved: "bg-[#CCF4EA] text-[#00C897]",
   Active: "bg-[#CCF4EA] text-[#00C897]",
   Passed: "bg-[#CCF4EA] text-[#00C897]",
-  Completed: "bg-[#CCF4EA] text-[#00C897]",
   Pending: "bg-[#FFF3CD] text-[#FFC107]",
   "Not Started": "bg-[#FFF3CD] text-[#FFC107]",
   Rejected: "bg-[#FDEDEB] text-[#E74C3C]",
