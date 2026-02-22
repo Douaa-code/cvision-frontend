@@ -167,9 +167,11 @@ export default function JobSearchPage() {
       </div>
 
       {/* Results */}
-      <p className="text-sm text-muted-foreground mb-4">
-        {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""} found
-      </p>
+      <div className="flex justify-end mb-4">
+        <span className="text-sm text-muted-foreground">
+          {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""} found
+        </span>
+      </div>
 
       {filteredJobs.length === 0 ? (
         <div className="text-center py-16">
