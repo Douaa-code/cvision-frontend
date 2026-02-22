@@ -46,17 +46,24 @@ export default function RecruitmentPage() {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6">
         <h1 className="text-xl sm:text-2xl font-bold">Recruitment Pipeline</h1>
-        <Select value={filterJob} onValueChange={setFilterJob}>
-          <SelectTrigger className="w-full sm:w-56">
-            <SelectValue placeholder="Filter by job" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Positions</SelectItem>
-            {companyJobs.map((job) => (
-              <SelectItem key={job.id} value={job.id}>{job.jobTitle}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Select value={filterJob} onValueChange={setFilterJob}>
+            <SelectTrigger className="w-full sm:w-56">
+              <SelectValue placeholder="Filter by job" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Positions</SelectItem>
+              {companyJobs.map((job) => (
+                <SelectItem key={job.id} value={job.id}>{job.jobTitle}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {filterJob !== "all" && (
+            <Button size="sm" onClick={() => setFilterJob("all")}>
+              Reset
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Pipeline Overview */}
