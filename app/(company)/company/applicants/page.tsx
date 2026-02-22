@@ -41,6 +41,7 @@ export default function ApplicantsPage() {
   const [applications, setApplications] = useState(mockCompanyApplications);
   const [filterJob, setFilterJob] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterCompatibility, setFilterCompatibility] = useState("all");
   const [actionDialog, setActionDialog] = useState<{
     app: Application;
     action: "Accept" | "Reject";
@@ -81,11 +82,14 @@ export default function ApplicantsPage() {
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 mb-3">
             <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filter Applicants</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Select value={filterJob} onValueChange={setFilterJob}>
-              <SelectTrigger className="w-full sm:w-52">
-                <SelectValue placeholder="Filter by job" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="All Jobs" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Jobs</SelectItem>
@@ -98,8 +102,8 @@ export default function ApplicantsPage() {
             </Select>
 
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-44">
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -109,13 +113,31 @@ export default function ApplicantsPage() {
               </SelectContent>
             </Select>
 
-            {(filterJob !== "all" || filterStatus !== "all") && (
+            <Select value={filterCompatibility} onValueChange={setFilterCompatibility}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="All Compatibility" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Compatibility</SelectItem>
+                <SelectItem value="90">90%+</SelectItem>
+                <SelectItem value="80">80%+</SelectItem>
+                <SelectItem value="70">70%+</SelectItem>
+                <SelectItem value="50">50%+</SelectItem>
+                <SelectItem value="u49">≤49%</SelectItem>
+                <SelectItem value="u20">≤20%</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-3 mt-3">
+
+            {(filterJob !== "all" || filterStatus !== "all" || filterCompatibility !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   setFilterJob("all");
                   setFilterStatus("all");
+                  setFilterCompatibility("all");
                 }}
                 className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
               >
