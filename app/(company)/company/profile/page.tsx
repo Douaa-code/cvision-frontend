@@ -102,7 +102,7 @@ export default function CompanyProfilePage() {
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
-                  {wilaya}
+                  {wilaya} - {postalCode}
                 </span>
                 <span className="flex items-center gap-1">
                   <Mail className="w-4 h-4" />
