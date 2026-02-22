@@ -42,6 +42,12 @@ export default function CompanyJobsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [domainFilter, setDomainFilter] = useState("all");
 
+  const filteredJobs = jobs.filter((j) => {
+    const matchStatus = statusFilter === "all" || j.status === statusFilter;
+    const matchDomain = domainFilter === "all" || j.domain === domainFilter;
+    return matchStatus && matchDomain;
+  });
+
   const handleCloseJob = (id: string) => {
     setJobs((prev) =>
       prev.map((j) => (j.id === id ? { ...j, status: "Closed" as const } : j))
@@ -143,7 +149,7 @@ export default function CompanyJobsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {jobs.map((job) => {
+                {filteredJobs.map((job) => {
                   const fillPercent = Math.round(
                     (job.currentAccepted / job.maxAcceptedCandidates) * 100
                   );
