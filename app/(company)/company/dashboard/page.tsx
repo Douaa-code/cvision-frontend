@@ -103,13 +103,13 @@ export default function CompanyDashboard() {
         })}
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Active Job Offers */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+      {/* Active Job Offers */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="mb-6"
+      >
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -155,9 +155,7 @@ export default function CompanyDashboard() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
-
-      </div>
+      </motion.div>
 
       {/* Recent Applications */}
       <motion.div
