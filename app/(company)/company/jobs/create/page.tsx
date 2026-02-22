@@ -140,7 +140,7 @@ export default function CreateJobPage() {
               <div className="space-y-2">
                 <Label>Domain *</Label>
                 <Select onValueChange={(v) => setValue("domain", v)}>
-                  <SelectTrigger><SelectValue placeholder="Select domain" /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Select domain" /></SelectTrigger>
                   <SelectContent>
                     {DOMAINS.map((d) => (
                       <SelectItem key={d} value={d}>{d}</SelectItem>
@@ -153,7 +153,7 @@ export default function CreateJobPage() {
               <div className="space-y-2">
                 <Label>Contract Type *</Label>
                 <Select onValueChange={(v) => setValue("contractType", v)}>
-                  <SelectTrigger><SelectValue placeholder="Select contract" /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Select contract" /></SelectTrigger>
                   <SelectContent>
                     {Object.values(ContractEnum).map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -166,7 +166,7 @@ export default function CreateJobPage() {
               <div className="space-y-2">
                 <Label>Experience Required *</Label>
                 <Select onValueChange={(v) => setValue("experienceRequired", v)}>
-                  <SelectTrigger><SelectValue placeholder="Select experience" /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Select experience" /></SelectTrigger>
                   <SelectContent>
                     {Object.values(ExperienceEnum).map((e) => (
                       <SelectItem key={e} value={e}>{e}</SelectItem>
@@ -179,7 +179,7 @@ export default function CreateJobPage() {
               <div className="space-y-2">
                 <Label>Salary Range *</Label>
                 <Select onValueChange={(v) => setValue("salaryRange", v)}>
-                  <SelectTrigger><SelectValue placeholder="Select salary" /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Select salary" /></SelectTrigger>
                   <SelectContent>
                     {Object.values(SalaryEnum).map((s) => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
@@ -192,7 +192,7 @@ export default function CreateJobPage() {
               <div className="space-y-2">
                 <Label>Wilaya *</Label>
                 <Select onValueChange={handleWilayaChange}>
-                  <SelectTrigger><SelectValue placeholder="Select wilaya" /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Select wilaya" /></SelectTrigger>
                   <SelectContent>
                     {getWilayaOptions().map((w) => (
                       <SelectItem key={w.value} value={w.value}>{w.label}</SelectItem>
