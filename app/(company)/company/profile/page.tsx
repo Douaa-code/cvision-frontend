@@ -40,6 +40,7 @@ export default function CompanyProfilePage() {
   const [website, setWebsite] = useState(mockCompany.website ?? "");
   const [wilaya, setWilaya] = useState<string>(mockCompany.wilaya);
   const [postalCode, setPostalCode] = useState(mockCompany.postalCode);
+  const [streetAddress, setStreetAddress] = useState("");
   const [description, setDescription] = useState(mockCompany.description);
 
   const handleWilayaChange = (value: string) => {
@@ -63,6 +64,7 @@ export default function CompanyProfilePage() {
     setWebsite(mockCompany.website ?? "");
     setWilaya(mockCompany.wilaya);
     setPostalCode(mockCompany.postalCode);
+    setStreetAddress("");
     setDescription(mockCompany.description);
   };
 
@@ -197,6 +199,15 @@ export default function CompanyProfilePage() {
                     </Select>
                   ) : (
                     <p className="text-sm text-muted-foreground p-2">{wilaya}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Street Address</Label>
+                  {editing ? (
+                    <Input value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} placeholder="e.g. 12 Rue Didouche Mourad" />
+                  ) : (
+                    <p className="text-sm text-muted-foreground p-2">{streetAddress || "—"}</p>
                   )}
                 </div>
 
