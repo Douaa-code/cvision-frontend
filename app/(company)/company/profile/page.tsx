@@ -22,7 +22,7 @@ import {
   MapPin,
   FileText,
   Check,
-  Upload,
+  ShieldAlert,
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { mockCompany } from "@/lib/mock-data/company";
@@ -260,12 +260,12 @@ export default function CompanyProfilePage() {
                   <span className="text-xs text-cvision-green font-medium bg-cvision-green-bg px-2 py-1 rounded">Verified</span>
                 </div>
 
-                {editing && (
-                  <Button variant="outline" className="w-full mt-2">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Additional Document
-                  </Button>
-                )}
+                <div className="flex items-start gap-3 mt-4 p-4 bg-[#FDEDEB] border border-cvision-red/20 rounded-lg">
+                  <ShieldAlert className="w-5 h-5 text-cvision-red flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-cvision-red leading-relaxed">
+                    For security reasons, legal documents cannot be modified. Please contact CVision administration for any changes.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
