@@ -136,7 +136,6 @@ export type CompanyStatusEnum =
 
 export const TestStatusEnum = {
   NOT_STARTED: "Not Started",
-  COMPLETED: "Completed",
   PASSED: "Passed",
   FAILED: "Failed",
 } as const;
