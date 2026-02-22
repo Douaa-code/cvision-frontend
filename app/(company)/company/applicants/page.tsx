@@ -124,12 +124,12 @@ export default function ApplicantsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Compatibility</SelectItem>
-                <SelectItem value="90">90%+</SelectItem>
-                <SelectItem value="80">80%+</SelectItem>
-                <SelectItem value="70">70%+</SelectItem>
-                <SelectItem value="50">50%+</SelectItem>
-                <SelectItem value="u49">≤49%</SelectItem>
-                <SelectItem value="u20">≤20%</SelectItem>
+                <SelectItem value="90"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-green inline-block" />90%+</span></SelectItem>
+                <SelectItem value="80"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-green inline-block" />80%+</span></SelectItem>
+                <SelectItem value="70"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-yellow inline-block" />70%+</span></SelectItem>
+                <SelectItem value="50"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-yellow inline-block" />50%+</span></SelectItem>
+                <SelectItem value="u49"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-red inline-block" />≤49%</span></SelectItem>
+                <SelectItem value="u20"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-red inline-block" />≤20%</span></SelectItem>
               </SelectContent>
             </Select>
           </div>
