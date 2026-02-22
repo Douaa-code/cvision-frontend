@@ -202,7 +202,11 @@ export default function CompanyProfilePage() {
 
                 <div className="space-y-2">
                   <Label>Postal Code</Label>
-                  <p className="text-sm text-muted-foreground p-2">{postalCode}</p>
+                  {editing ? (
+                    <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground p-2">{postalCode}</p>
+                  )}
                 </div>
               </div>
 
