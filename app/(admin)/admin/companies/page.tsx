@@ -73,6 +73,8 @@ export default function CompaniesListPage() {
                 Reset
               </Button>
             )}
+          </div>
+          <div className="flex justify-end mt-3">
             <span className="text-sm text-muted-foreground">
               {filtered.length} compan{filtered.length !== 1 ? "ies" : "y"}
             </span>

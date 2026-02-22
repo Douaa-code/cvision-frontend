@@ -70,6 +70,8 @@ export default function CandidatesListPage() {
                 Reset
               </Button>
             )}
+          </div>
+          <div className="flex justify-end mt-3">
             <span className="text-sm text-muted-foreground">
               {filtered.length} candidate{filtered.length !== 1 ? "s" : ""}
             </span>

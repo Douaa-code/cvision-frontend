@@ -97,6 +97,8 @@ export default function AdminJobsPage() {
                 Reset
               </Button>
             )}
+          </div>
+          <div className="flex justify-end mt-3">
             <span className="text-sm text-muted-foreground">{filtered.length} jobs</span>
           </div>
         </CardContent>

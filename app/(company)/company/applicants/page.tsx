@@ -118,39 +118,35 @@ export default function ApplicantsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={filterCompatibility} onValueChange={setFilterCompatibility}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="All Compatibility" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Compatibility</SelectItem>
-                <SelectItem value="90"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-green inline-block" />90%+</span></SelectItem>
-                <SelectItem value="80"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-green inline-block" />80%+</span></SelectItem>
-                <SelectItem value="70"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-yellow inline-block" />70%+</span></SelectItem>
-                <SelectItem value="50"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-yellow inline-block" />50%+</span></SelectItem>
-                <SelectItem value="u49"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-red inline-block" />≤49%</span></SelectItem>
-                <SelectItem value="u20"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-red inline-block" />≤20%</span></SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select value={filterCompatibility} onValueChange={setFilterCompatibility}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Compatibility" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Compatibility</SelectItem>
+                  <SelectItem value="90"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-green inline-block" />90%+</span></SelectItem>
+                  <SelectItem value="80"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-green inline-block" />80%+</span></SelectItem>
+                  <SelectItem value="70"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-yellow inline-block" />70%+</span></SelectItem>
+                  <SelectItem value="50"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-yellow inline-block" />50%+</span></SelectItem>
+                  <SelectItem value="u49"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-red inline-block" />≤49%</span></SelectItem>
+                  <SelectItem value="u20"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-red inline-block" />≤20%</span></SelectItem>
+                </SelectContent>
+              </Select>
+              {(filterJob !== "all" || filterStatus !== "all" || filterCompatibility !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setFilterJob("all"); setFilterStatus("all"); setFilterCompatibility("all"); }}
+                  className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200 shrink-0"
+                >
+                  Reset
+                </Button>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-3 mt-3">
-
-            {(filterJob !== "all" || filterStatus !== "all" || filterCompatibility !== "all") && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setFilterJob("all");
-                  setFilterStatus("all");
-                  setFilterCompatibility("all");
-                }}
-                className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
-              >
-                Reset
-              </Button>
-            )}
-
-            <span className="text-sm text-muted-foreground ml-auto">
+          <div className="flex justify-end mt-3">
+            <span className="text-sm text-muted-foreground">
               {filtered.length} applicant{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
