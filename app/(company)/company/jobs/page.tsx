@@ -130,8 +130,10 @@ export default function CompanyJobsPage() {
               </Select>
               {(statusFilter !== "all" || domainFilter !== "all") && (
                 <Button
+                  variant="ghost"
                   size="sm"
                   onClick={() => { setStatusFilter("all"); setDomainFilter("all"); }}
+                  className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
                 >
                   Reset
                 </Button>
