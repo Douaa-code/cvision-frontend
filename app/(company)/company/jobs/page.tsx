@@ -116,6 +116,7 @@ export default function CompanyJobsPage() {
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Domain</p>
+              <div className="flex items-center gap-2">
               <Select value={domainFilter} onValueChange={setDomainFilter}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All Domains" />
@@ -127,6 +128,15 @@ export default function CompanyJobsPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {(statusFilter !== "all" || domainFilter !== "all") && (
+                <Button
+                  size="sm"
+                  onClick={() => { setStatusFilter("all"); setDomainFilter("all"); }}
+                >
+                  Reset
+                </Button>
+              )}
+              </div>
             </div>
           </div>
         </CardContent>
