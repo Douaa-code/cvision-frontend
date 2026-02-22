@@ -111,7 +111,6 @@ export default function ApplicantsPage() {
 
             {(filterJob !== "all" || filterStatus !== "all") && (
               <Button
-                variant="ghost"
                 size="sm"
                 onClick={() => {
                   setFilterJob("all");
