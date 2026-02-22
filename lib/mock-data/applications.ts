@@ -32,7 +32,7 @@ export const mockApplications: Application[] = [
     appliedDate: new Date("2026-02-01"),
     currentStatus: "Pending",
     compatibilityScore: 92,
-    testStatus: "Completed",
+    testStatus: "Passed",
     testScore: 76,
     testCompletedAt: new Date("2026-02-03"),
     createdAt: new Date("2026-02-01"),
