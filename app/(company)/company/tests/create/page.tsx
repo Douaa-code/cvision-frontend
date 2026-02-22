@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, CheckCircle2, GripVertical } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, GripVertical, ClipboardList } from "lucide-react";
 import { DOMAINS } from "@/lib/constants/domains";
 
 type QuestionDraft = {
@@ -117,7 +118,15 @@ export default function CreateTestPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      <h1 className="text-2xl font-bold mb-6">Create Test</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Create Test</h1>
+        <Link href="/company/tests">
+          <Button variant="outline">
+            <ClipboardList className="w-4 h-4 mr-2" />
+            View Tests
+          </Button>
+        </Link>
+      </div>
 
       {/* Test Info */}
       <Card className="mb-6">

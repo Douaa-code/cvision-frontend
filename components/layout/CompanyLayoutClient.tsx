@@ -21,6 +21,7 @@ const companySidebarItems: SidebarItem[] = [
   { label: "Job Offers", href: "/company/jobs", icon: Briefcase },
   { label: "Applicants", href: "/company/applicants", icon: Users },
   { label: "Recruitment", href: "/company/recruitment", icon: UserCheck },
+  { label: "Tests", href: "/company/tests", icon: ClipboardCheck },
   { label: "Create Test", href: "/company/tests/create", icon: ClipboardCheck },
   { label: "Create Training", href: "/company/training/create", icon: GraduationCap },
   { label: "Settings", href: "/company/settings", icon: Settings },
