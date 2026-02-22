@@ -23,7 +23,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Users, MapPin, Calendar, Eye, XCircle } from "lucide-react";
+import { Plus, Users, MapPin, Calendar, Eye, XCircle, Filter } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DOMAINS } from "@/lib/constants/domains";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { mockJobs } from "@/lib/mock-data/jobs";
 
@@ -31,6 +39,8 @@ export default function CompanyJobsPage() {
   const companyJobs = mockJobs.filter((j) => j.companyId === "c1");
   const [jobs, setJobs] = useState(companyJobs);
   const [closeDialogId, setCloseDialogId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [domainFilter, setDomainFilter] = useState("all");
 
   const handleCloseJob = (id: string) => {
     setJobs((prev) =>
@@ -76,6 +86,45 @@ export default function CompanyJobsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filter Job Offers</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Status</p>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Domain</p>
+              <Select value={domainFilter} onValueChange={setDomainFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Domains" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Domains</SelectItem>
+                  {DOMAINS.map((d) => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Jobs Table */}
       <Card>
