@@ -30,10 +30,14 @@ export default function AdminJobsPage() {
   const [search, setSearch] = useState("");
   const [filterDomain, setFilterDomain] = useState("all");
 
+  const [filterLocation, setFilterLocation] = useState("all");
+
   const domains = [...new Set(mockJobs.map((j) => j.domain))];
+  const locations = [...new Set(mockJobs.map((j) => j.wilaya))];
 
   const filtered = mockJobs.filter((j) => {
     if (filterDomain !== "all" && j.domain !== filterDomain) return false;
+    if (filterLocation !== "all" && j.wilaya !== filterLocation) return false;
     if (search && !j.jobTitle.toLowerCase().includes(search.toLowerCase()) && !j.companyName?.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -87,11 +91,22 @@ export default function AdminJobsPage() {
                 ))}
               </SelectContent>
             </Select>
-            {(search !== "" || filterDomain !== "all") && (
+            <Select value={filterLocation} onValueChange={setFilterLocation}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {locations.map((l) => (
+                  <SelectItem key={l} value={l}>{l}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(search !== "" || filterDomain !== "all" || filterLocation !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => { setSearch(""); setFilterDomain("all"); }}
+                onClick={() => { setSearch(""); setFilterDomain("all"); setFilterLocation("all"); }}
                 className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 Reset
