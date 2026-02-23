@@ -108,9 +108,10 @@ export default function CandidatesListPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.email}</TableCell>
                     <TableCell>
-                      <span className="flex items-center gap-1 text-sm">
-                        <MapPin className="w-3 h-3" />{c.wilaya}{c.postalCode ? ` - ${c.postalCode}` : ""}
-                      </span>
+                      <div>
+                        <p className="text-sm flex items-center gap-1"><MapPin className="w-3 h-3" />{c.wilaya}</p>
+                        {c.postalCode && <p className="text-xs text-muted-foreground">{c.postalCode}</p>}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div>
