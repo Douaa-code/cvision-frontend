@@ -8,7 +8,6 @@ import {
   Users,
   Briefcase,
   ClipboardList,
-  TrendingUp,
   CheckCircle2,
   XCircle,
   Clock,
@@ -22,6 +21,21 @@ import {
   staggerContainerVariants,
   staggerItemVariants,
 } from "@/lib/animations/variants";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 const kpis = [
   { label: "Companies", value: platformStats.totalCompanies, icon: Building2, color: "text-cvision-blue", sub: `${platformStats.approvedCompanies} approved` },
@@ -30,29 +44,31 @@ const kpis = [
   { label: "Applications", value: platformStats.totalApplications, icon: ClipboardList, color: "text-cvision-blue", sub: `${platformStats.acceptedApplications} accepted` },
 ];
 
-const maxDomainCount = Math.max(...applicationsByDomain.map((d) => d.count));
-
 const geoData = [
-  { label: "Algiers", value: 45, color: "#FFC107" },
-  { label: "Oran", value: 35, color: "#F97316" },
-  { label: "Bejaia", value: 20, color: "#FB923C" },
+  { name: "Algiers", value: 45 },
+  { name: "Oran", value: 35 },
+  { name: "Bejaia", value: 20 },
 ];
+const GEO_COLORS = ["#FFC107", "#F97316", "#00C897"];
 
 const monthlyApplicationsData = [
-  { month: "Jan", count: 28 },
-  { month: "Feb", count: 42 },
-  { month: "Mar", count: 35 },
-  { month: "Apr", count: 58 },
-  { month: "May", count: 72 },
-  { month: "Jun", count: 65 },
+  { month: "Jan", applications: 28 },
+  { month: "Feb", applications: 42 },
+  { month: "Mar", applications: 35 },
+  { month: "Apr", applications: 58 },
+  { month: "May", applications: 72 },
+  { month: "Jun", applications: 65 },
 ];
-const maxAppCount = Math.max(...monthlyApplicationsData.map((d) => d.count));
-const appPoints = monthlyApplicationsData.map((d, i) => ({
-  month: d.month,
-  count: d.count,
-  x: 40 + (i / (monthlyApplicationsData.length - 1)) * 440,
-  y: 140 - (d.count / maxAppCount) * 120,
+
+const registrationsData = monthlyRegistrations.map((m) => ({
+  month: m.month,
+  Companies: m.companies,
+  Candidates: m.candidates,
 }));
+
+const domainData = [...applicationsByDomain]
+  .sort((a, b) => a.count - b.count)
+  .map((d) => ({ name: d.domain, Applications: d.count }));
 
 export default function AnalyticsPage() {
   return (
@@ -88,7 +104,7 @@ export default function AnalyticsPage() {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Registration Trends */}
+        {/* Monthly Registrations */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -98,38 +114,20 @@ export default function AnalyticsPage() {
             <CardContent className="p-6">
               <h2 className="font-semibold text-lg mb-1">Monthly Registrations</h2>
               <p className="text-sm text-muted-foreground mb-4">Companies and candidates over the last 6 months</p>
-              <div className="space-y-3">
-                {monthlyRegistrations.map((m) => (
-                  <div key={m.month} className="flex items-center gap-3">
-                    <span className="text-sm font-medium w-10">{m.month}</span>
-                    <div className="flex-1 flex items-center gap-2">
-                      <div className="flex-1 h-6 bg-cvision-container rounded overflow-hidden flex">
-                        <div
-                          className="h-full bg-cvision-blue rounded-l"
-                          style={{ width: `${(m.companies / 4) * 100}%` }}
-                        />
-                        <div
-                          className="h-full bg-cvision-green"
-                          style={{ width: `${(m.candidates / 4) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground w-16 text-right">
-                        {m.companies}C / {m.candidates}U
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-4 mt-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-cvision-blue inline-block" />
-                  Companies
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-cvision-green inline-block" />
-                  Candidates
-                </span>
-              </div>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={registrationsData} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }}
+                    cursor={{ fill: "#F3F4F6" }}
+                  />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="Companies" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Candidates" fill="#00C897" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </motion.div>
@@ -144,24 +142,18 @@ export default function AnalyticsPage() {
             <CardContent className="p-6">
               <h2 className="font-semibold text-lg mb-1">Applications by Domain</h2>
               <p className="text-sm text-muted-foreground mb-4">Distribution across activity domains</p>
-              <div className="space-y-4">
-                {applicationsByDomain.map((d) => (
-                  <div key={d.domain}>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="font-medium">{d.domain}</span>
-                      <span className="text-muted-foreground">{d.count}</span>
-                    </div>
-                    <div className="h-3 bg-cvision-container rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(d.count / maxDomainCount) * 100}%` }}
-                        transition={{ duration: 0.8, delay: 0.5 }}
-                        className="h-full bg-cvision-green rounded-full"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={domainData} layout="vertical" barCategoryGap="25%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} width={90} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }}
+                    cursor={{ fill: "#F3F4F6" }}
+                  />
+                  <Bar dataKey="Applications" fill="#00C897" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </motion.div>
@@ -172,47 +164,39 @@ export default function AnalyticsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
         >
-        <Card className="h-full">
-          <CardContent className="p-6">
-            <h2 className="font-semibold text-lg mb-1">Applications Over Time</h2>
-            <p className="text-sm text-muted-foreground mb-6">Monthly application submissions</p>
-            <div className="w-full overflow-x-auto">
-              <svg viewBox="0 0 500 180" className="w-full" style={{ minWidth: 300 }}>
-                {/* Horizontal grid lines */}
-                {[20, 80, 140].map((y) => (
-                  <line key={y} x1="40" y1={y} x2="480" y2={y} stroke="#E5E7EB" strokeDasharray="4 4" strokeWidth="1" />
-                ))}
-                {/* Y-axis labels */}
-                <text x="35" y="24" textAnchor="end" fontSize="10" fill="#6B7280">{maxAppCount}</text>
-                <text x="35" y="84" textAnchor="end" fontSize="10" fill="#6B7280">{Math.round(maxAppCount / 2)}</text>
-                <text x="35" y="144" textAnchor="end" fontSize="10" fill="#6B7280">0</text>
-                {/* Area fill */}
-                <path
-                  d={`M${appPoints[0].x},140 ${appPoints.map((p) => `L${p.x},${p.y}`).join(" ")} L${appPoints[appPoints.length - 1].x},140 Z`}
-                  fill="#00C897"
-                  fillOpacity="0.08"
-                />
-                {/* Line */}
-                <polyline
-                  points={appPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-                  fill="none"
-                  stroke="#00C897"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                {/* Dots */}
-                {appPoints.map((p) => (
-                  <circle key={p.month} cx={p.x} cy={p.y} r="4" fill="#00C897" stroke="white" strokeWidth="2" />
-                ))}
-                {/* X-axis labels */}
-                {appPoints.map((p) => (
-                  <text key={p.month} x={p.x} y="165" textAnchor="middle" fontSize="11" fill="#6B7280">{p.month}</text>
-                ))}
-              </svg>
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <h2 className="font-semibold text-lg mb-1">Applications Over Time</h2>
+              <p className="text-sm text-muted-foreground mb-4">Monthly application submissions</p>
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={monthlyApplicationsData}>
+                  <defs>
+                    <linearGradient id="appGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#00C897" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#00C897" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }}
+                    cursor={{ stroke: "#E5E7EB" }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="applications"
+                    stroke="#00C897"
+                    strokeWidth={2.5}
+                    fill="url(#appGradient)"
+                    dot={{ fill: "#00C897", strokeWidth: 2, r: 4, stroke: "white" }}
+                    activeDot={{ r: 6, stroke: "white", strokeWidth: 2 }}
+                    name="Applications"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Geographic Distribution */}
@@ -224,44 +208,29 @@ export default function AnalyticsPage() {
           <Card className="h-full">
             <CardContent className="p-6">
               <h2 className="font-semibold text-lg mb-1">Geographic Distribution</h2>
-              <p className="text-sm text-muted-foreground mb-6">User distribution by region</p>
-              <div className="flex flex-col items-center">
-                <svg viewBox="0 0 200 200" className="w-48 h-48">
-                  {(() => {
-                    const cx = 100, cy = 100, r = 70, sw = 40;
-                    const circ = 2 * Math.PI * r;
-                    let cum = 0;
-                    return geoData.map((d) => {
-                      const offset = circ * 0.25 - (cum / 100) * circ;
-                      cum += d.value;
-                      return (
-                        <circle
-                          key={d.label}
-                          cx={cx} cy={cy} r={r}
-                          fill="none"
-                          stroke={d.color}
-                          strokeWidth={sw}
-                          strokeDasharray={`${(d.value / 100) * circ} ${circ - (d.value / 100) * circ}`}
-                          strokeDashoffset={offset}
-                        />
-                      );
-                    });
-                  })()}
-                  <text x="100" y="95" textAnchor="middle" fontSize="14" fontWeight="600" fill="#1F2937">3</text>
-                  <text x="100" y="112" textAnchor="middle" fontSize="10" fill="#6B7280">Regions</text>
-                </svg>
-                <div className="flex flex-col gap-2 mt-2 w-full">
-                  {geoData.map((d) => (
-                    <div key={d.label} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-                        <span className="font-medium">{d.label}</span>
-                      </div>
-                      <span className="text-muted-foreground">{d.value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground mb-4">User distribution by region</p>
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={geoData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {geoData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={GEO_COLORS[index]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [`${value}%`, "Share"]}
+                    contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }}
+                  />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </motion.div>
