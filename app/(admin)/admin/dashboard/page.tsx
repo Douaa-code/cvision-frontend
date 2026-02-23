@@ -168,32 +168,7 @@ export default function AdminDashboard() {
         </motion.div>
       </div>
 
-      {/* Quick Overview */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Application Overview</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 bg-cvision-yellow-bg rounded-lg text-center">
-                <p className="text-3xl font-bold text-cvision-yellow">{platformStats.pendingApplications}</p>
-                <p className="text-sm text-muted-foreground">Pending</p>
-              </div>
-              <div className="p-4 bg-cvision-green-bg rounded-lg text-center">
-                <p className="text-3xl font-bold text-cvision-green">{platformStats.acceptedApplications}</p>
-                <p className="text-sm text-muted-foreground">Accepted</p>
-              </div>
-              <div className="p-4 bg-cvision-red-bg rounded-lg text-center">
-                <p className="text-3xl font-bold text-cvision-red">{platformStats.rejectedApplications}</p>
-                <p className="text-sm text-muted-foreground">Rejected</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+
     </div>
   );
 }
