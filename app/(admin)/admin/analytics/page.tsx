@@ -303,17 +303,17 @@ export default function AnalyticsPage() {
               <div className="text-center p-4 bg-cvision-yellow-bg rounded-lg">
                 <Clock className="w-6 h-6 text-cvision-yellow mx-auto mb-2" />
                 <p className="text-2xl font-bold">{platformStats.pendingApplications}</p>
-                <p className="text-xs text-muted-foreground">Pending ({Math.round((platformStats.pendingApplications / platformStats.totalApplications) * 100)}%)</p>
+                <p className="text-xs text-muted-foreground">Pending</p>
               </div>
               <div className="text-center p-4 bg-cvision-green-bg rounded-lg">
                 <CheckCircle2 className="w-6 h-6 text-cvision-green mx-auto mb-2" />
                 <p className="text-2xl font-bold">{platformStats.acceptedApplications}</p>
-                <p className="text-xs text-muted-foreground">Accepted ({Math.round((platformStats.acceptedApplications / platformStats.totalApplications) * 100)}%)</p>
+                <p className="text-xs text-muted-foreground">Accepted</p>
               </div>
               <div className="text-center p-4 bg-cvision-red-bg rounded-lg">
                 <XCircle className="w-6 h-6 text-cvision-red mx-auto mb-2" />
                 <p className="text-2xl font-bold">{platformStats.rejectedApplications}</p>
-                <p className="text-xs text-muted-foreground">Rejected ({Math.round((platformStats.rejectedApplications / platformStats.totalApplications) * 100)}%)</p>
+                <p className="text-xs text-muted-foreground">Rejected</p>
               </div>
             </div>
 
