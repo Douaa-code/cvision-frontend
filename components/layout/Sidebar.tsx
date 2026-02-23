@@ -23,7 +23,7 @@ export function Sidebar({ items, title }: SidebarProps) {
   return (
     <aside className="w-64 min-h-screen bg-white border-r border-border flex flex-col">
       {/* Brand */}
-      <div className="h-14 sm:h-16 flex items-center px-4 sm:px-6 bg-gradient-to-r from-emerald-500 to-blue-500">
+      <div className="h-14 sm:h-16 flex items-center px-4 sm:px-6 bg-emerald-500">
         <Link href="/">
           <Image
             src="/logo/logo_cvision_blanc.png"

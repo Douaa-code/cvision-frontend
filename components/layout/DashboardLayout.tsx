@@ -48,10 +48,10 @@ export function DashboardLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
-        <header className="h-14 sm:h-16 bg-white border-b border-border flex items-center justify-between px-3 sm:px-4 md:px-6">
+        <header className="h-14 sm:h-16 bg-gradient-to-r from-emerald-500 to-blue-500 flex items-center justify-between px-3 sm:px-4 md:px-6">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
-              className="lg:hidden p-2.5"
+              className="lg:hidden p-2.5 text-white"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu className="w-5 h-5" />
@@ -61,7 +61,7 @@ export function DashboardLayout({
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-white/80 hover:text-white transition-colors"
                 >
                   {link.label}
                 </Link>
@@ -70,13 +70,13 @@ export function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
+            <span className="text-xs sm:text-sm text-white/80 hidden sm:inline">
               {userName}
             </span>
-            <div className="w-8 h-8 rounded-full bg-cvision-green flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
+            <Button variant="ghost" size="sm" className="text-white hover:text-white hover:bg-white/10">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
