@@ -32,6 +32,12 @@ const kpis = [
 
 const maxDomainCount = Math.max(...applicationsByDomain.map((d) => d.count));
 
+const geoData = [
+  { label: "Algiers", value: 45, color: "#FFC107" },
+  { label: "Oran", value: 35, color: "#F97316" },
+  { label: "Bejaia", value: 20, color: "#FB923C" },
+];
+
 const monthlyApplicationsData = [
   { month: "Jan", count: 28 },
   { month: "Feb", count: 42 },
@@ -207,6 +213,57 @@ export default function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
+
+        {/* Geographic Distribution */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <h2 className="font-semibold text-lg mb-1">Geographic Distribution</h2>
+              <p className="text-sm text-muted-foreground mb-6">User distribution by region</p>
+              <div className="flex flex-col items-center">
+                <svg viewBox="0 0 200 200" className="w-48 h-48">
+                  {(() => {
+                    const cx = 100, cy = 100, r = 70, sw = 40;
+                    const circ = 2 * Math.PI * r;
+                    let cum = 0;
+                    return geoData.map((d) => {
+                      const offset = circ * 0.25 - (cum / 100) * circ;
+                      cum += d.value;
+                      return (
+                        <circle
+                          key={d.label}
+                          cx={cx} cy={cy} r={r}
+                          fill="none"
+                          stroke={d.color}
+                          strokeWidth={sw}
+                          strokeDasharray={`${(d.value / 100) * circ} ${circ - (d.value / 100) * circ}`}
+                          strokeDashoffset={offset}
+                        />
+                      );
+                    });
+                  })()}
+                  <text x="100" y="95" textAnchor="middle" fontSize="14" fontWeight="600" fill="#1F2937">3</text>
+                  <text x="100" y="112" textAnchor="middle" fontSize="10" fill="#6B7280">Regions</text>
+                </svg>
+                <div className="flex flex-col gap-2 mt-2 w-full">
+                  {geoData.map((d) => (
+                    <div key={d.label} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                        <span className="font-medium">{d.label}</span>
+                      </div>
+                      <span className="text-muted-foreground">{d.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
 
