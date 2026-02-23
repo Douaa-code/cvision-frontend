@@ -28,9 +28,16 @@ import { mockAdminCompanies } from "@/lib/mock-data/admin";
 export default function CompaniesListPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterWilaya, setFilterWilaya] = useState("all");
+  const [filterDomain, setFilterDomain] = useState("all");
+
+  const wilayas = [...new Set(mockAdminCompanies.map((c) => c.wilaya))];
+  const domains = [...new Set(mockAdminCompanies.map((c) => c.activityDomain))];
 
   const filtered = mockAdminCompanies.filter((c) => {
     if (filterStatus !== "all" && c.status !== filterStatus) return false;
+    if (filterWilaya !== "all" && c.wilaya !== filterWilaya) return false;
+    if (filterDomain !== "all" && c.activityDomain !== filterDomain) return false;
     if (search && !c.companyName.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -63,11 +70,33 @@ export default function CompaniesListPage() {
                 <SelectItem value="Rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
-            {(search !== "" || filterStatus !== "all") && (
+            <Select value={filterWilaya} onValueChange={setFilterWilaya}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Wilaya" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Wilayas</SelectItem>
+                {wilayas.map((w) => (
+                  <SelectItem key={w} value={w}>{w}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterDomain} onValueChange={setFilterDomain}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Domain" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Domains</SelectItem>
+                {domains.map((d) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(search !== "" || filterStatus !== "all" || filterWilaya !== "all" || filterDomain !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => { setSearch(""); setFilterStatus("all"); }}
+                onClick={() => { setSearch(""); setFilterStatus("all"); setFilterWilaya("all"); setFilterDomain("all"); }}
                 className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 Reset
