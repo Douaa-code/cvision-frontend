@@ -21,6 +21,19 @@ import {
   staggerContainerVariants,
   staggerItemVariants,
 } from "@/lib/animations/variants";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 const stats = [
   { label: "Applications Sent", value: "25", icon: Send, color: "text-cvision-blue" },
@@ -32,6 +45,24 @@ const stats = [
 const hasAcceptedOffers = mockApplications.some(
   (a) => a.currentStatus === "Accepted"
 );
+
+// Chart data
+const statusCounts = {
+  Accepted: mockApplications.filter((a) => a.currentStatus === "Accepted").length,
+  Pending: mockApplications.filter((a) => a.currentStatus === "Pending").length,
+  Rejected: mockApplications.filter((a) => a.currentStatus === "Rejected").length,
+};
+const statusData = [
+  { name: "Accepted", value: statusCounts.Accepted },
+  { name: "Pending", value: statusCounts.Pending },
+  { name: "Rejected", value: statusCounts.Rejected },
+];
+const STATUS_COLORS = ["#00C897", "#FFC107", "#E74C3C"];
+
+const compatibilityData = mockApplications.map((a) => ({
+  name: a.jobTitle.length > 22 ? a.jobTitle.slice(0, 22) + "…" : a.jobTitle,
+  Score: a.compatibilityScore,
+}));
 
 export default function CandidateDashboard() {
   const recentApplications = mockApplications.slice(0, 5);
@@ -68,6 +99,72 @@ export default function CandidateDashboard() {
           );
         })}
       </motion.div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Application Status */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <h2 className="font-semibold text-lg mb-1">Application Status</h2>
+              <p className="text-sm text-muted-foreground mb-2">Breakdown of your applications</p>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {statusData.map((_, i) => (
+                      <Cell key={i} fill={STATUS_COLORS[i]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [value, "Applications"]}
+                    contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }}
+                  />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Compatibility per Application */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <h2 className="font-semibold text-lg mb-1">Compatibility Scores</h2>
+              <p className="text-sm text-muted-foreground mb-2">Your score per job application</p>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={compatibilityData} layout="vertical" barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
+                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} unit="%" />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} width={115} />
+                  <Tooltip
+                    formatter={(value) => [`${value}%`, "Score"]}
+                    contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }}
+                    cursor={{ fill: "#F3F4F6" }}
+                  />
+                  <Bar dataKey="Score" fill="#00C897" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
       {/* Acceptance Notice */}
       {hasAcceptedOffers && (
