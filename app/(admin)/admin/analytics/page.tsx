@@ -236,6 +236,55 @@ export default function AnalyticsPage() {
         </motion.div>
       </div>
 
+      {/* Recent Activity Summary */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="mt-6 mb-6"
+      >
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="font-semibold text-lg mb-1">Recent Activity Summary</h2>
+            <p className="text-sm text-muted-foreground mb-4">Latest platform activity</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Activity</th>
+                    <th className="text-right py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Count</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {[
+                    { date: "Today", activity: "New Applications", count: 45 },
+                    { date: "Today", activity: "New Candidate Registrations", count: 23 },
+                    { date: "Today", activity: "New Company Registrations", count: 2 },
+                    { date: "Today", activity: "Tests Completed", count: 38 },
+                    { date: "This Week", activity: "Total Job Offers Created", count: 125 },
+                  ].map((row, i) => (
+                    <tr key={i} className="hover:bg-cvision-container transition-colors">
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          row.date === "Today"
+                            ? "bg-cvision-green-bg text-cvision-green"
+                            : "bg-cvision-container text-cvision-blue"
+                        }`}>
+                          {row.date}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-foreground">{row.activity}</td>
+                      <td className="py-3 px-4 text-right font-bold text-foreground">{row.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Application Funnel */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -298,6 +347,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </motion.div>
+
     </motion.div>
   );
 }
