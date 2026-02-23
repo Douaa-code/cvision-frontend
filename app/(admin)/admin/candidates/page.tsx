@@ -109,7 +109,7 @@ export default function CandidatesListPage() {
                     <TableCell className="text-sm text-muted-foreground">{c.email}</TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1 text-sm">
-                        <MapPin className="w-3 h-3" />{c.wilaya}
+                        <MapPin className="w-3 h-3" />{c.wilaya}{c.postalCode ? ` - ${c.postalCode}` : ""}
                       </span>
                     </TableCell>
                     <TableCell>
