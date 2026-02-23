@@ -39,7 +39,6 @@ export default function CompanySettingsPage() {
   // Notifications
   const [emailNewApp, setEmailNewApp] = useState(true);
   const [emailTestComplete, setEmailTestComplete] = useState(true);
-  const [emailWeeklyReport, setEmailWeeklyReport] = useState(false);
 
   // Security
   const [currentPassword, setCurrentPassword] = useState("");
@@ -151,13 +150,7 @@ export default function CompanySettingsPage() {
                   <p className="text-xs text-muted-foreground">Get notified when a candidate completes a test.</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Checkbox id="notifWeekly" checked={emailWeeklyReport} onCheckedChange={(c) => setEmailWeeklyReport(c === true)} />
-                <div>
-                  <Label htmlFor="notifWeekly" className="cursor-pointer">Weekly Report</Label>
-                  <p className="text-xs text-muted-foreground">Receive a weekly summary of recruitment activity.</p>
-                </div>
-              </div>
+
             </div>
             <div className="flex justify-end">
               <Button onClick={handleSave}>Save Preferences</Button>
