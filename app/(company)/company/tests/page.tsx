@@ -88,11 +88,11 @@ export default function CompanyTestsPage() {
                 <TableBody>
                   {companyTests.map((test) => (
                     <TableRow key={test.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{test.testName}</p>
+                      <TableCell className="max-w-[250px]">
+                        <div className="overflow-hidden">
+                          <p className="font-medium truncate">{test.testName}</p>
                           {test.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-1">
+                            <p className="text-xs text-muted-foreground truncate">
                               {test.description}
                             </p>
                           )}
