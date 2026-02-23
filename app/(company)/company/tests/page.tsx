@@ -19,7 +19,7 @@ const companyTests = mockTests.filter((t) => t.companyId === "c1");
 
 export default function CompanyTestsPage() {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Tests</h1>
         <Link href="/company/tests/create">
