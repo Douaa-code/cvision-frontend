@@ -32,6 +32,22 @@ const kpis = [
 
 const maxDomainCount = Math.max(...applicationsByDomain.map((d) => d.count));
 
+const monthlyApplicationsData = [
+  { month: "Jan", count: 28 },
+  { month: "Feb", count: 42 },
+  { month: "Mar", count: 35 },
+  { month: "Apr", count: 58 },
+  { month: "May", count: 72 },
+  { month: "Jun", count: 65 },
+];
+const maxAppCount = Math.max(...monthlyApplicationsData.map((d) => d.count));
+const appPoints = monthlyApplicationsData.map((d, i) => ({
+  month: d.month,
+  count: d.count,
+  x: 40 + (i / (monthlyApplicationsData.length - 1)) * 440,
+  y: 140 - (d.count / maxAppCount) * 120,
+}));
+
 export default function AnalyticsPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -142,6 +158,55 @@ export default function AnalyticsPage() {
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Applications Over Time */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+        <Card className="h-full">
+          <CardContent className="p-6">
+            <h2 className="font-semibold text-lg mb-1">Applications Over Time</h2>
+            <p className="text-sm text-muted-foreground mb-6">Monthly application submissions</p>
+            <div className="w-full overflow-x-auto">
+              <svg viewBox="0 0 500 180" className="w-full" style={{ minWidth: 300 }}>
+                {/* Horizontal grid lines */}
+                {[20, 80, 140].map((y) => (
+                  <line key={y} x1="40" y1={y} x2="480" y2={y} stroke="#E5E7EB" strokeDasharray="4 4" strokeWidth="1" />
+                ))}
+                {/* Y-axis labels */}
+                <text x="35" y="24" textAnchor="end" fontSize="10" fill="#6B7280">{maxAppCount}</text>
+                <text x="35" y="84" textAnchor="end" fontSize="10" fill="#6B7280">{Math.round(maxAppCount / 2)}</text>
+                <text x="35" y="144" textAnchor="end" fontSize="10" fill="#6B7280">0</text>
+                {/* Area fill */}
+                <path
+                  d={`M${appPoints[0].x},140 ${appPoints.map((p) => `L${p.x},${p.y}`).join(" ")} L${appPoints[appPoints.length - 1].x},140 Z`}
+                  fill="#00C897"
+                  fillOpacity="0.08"
+                />
+                {/* Line */}
+                <polyline
+                  points={appPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+                  fill="none"
+                  stroke="#00C897"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                {/* Dots */}
+                {appPoints.map((p) => (
+                  <circle key={p.month} cx={p.x} cy={p.y} r="4" fill="#00C897" stroke="white" strokeWidth="2" />
+                ))}
+                {/* X-axis labels */}
+                {appPoints.map((p) => (
+                  <text key={p.month} x={p.x} y="165" textAnchor="middle" fontSize="11" fill="#6B7280">{p.month}</text>
+                ))}
+              </svg>
+            </div>
+          </CardContent>
+        </Card>
         </motion.div>
       </div>
 
