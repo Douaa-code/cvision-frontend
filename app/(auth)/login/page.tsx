@@ -122,7 +122,7 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     {...register("password")}
-                    className={errors.password ? "border-cvision-red pr-10" : "pr-10"}
+                    className={errors.password ? "border-cvision-red pr-10 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden" : "pr-10 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"}
                   />
                   <button
                     type="button"
