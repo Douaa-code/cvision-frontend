@@ -27,13 +27,19 @@ import { mockAdminCandidates } from "@/lib/mock-data/admin";
 export default function CandidatesListPage() {
   const [search, setSearch] = useState("");
   const [filterWilaya, setFilterWilaya] = useState("all");
+  const [filterDomain, setFilterDomain] = useState("all");
+  const [filterEducation, setFilterEducation] = useState("all");
 
   const wilayas = [...new Set(mockAdminCandidates.map((c) => c.wilaya))];
+  const domains = [...new Set(mockAdminCandidates.map((c) => c.fieldOfStudy))];
+  const educationLevels = [...new Set(mockAdminCandidates.map((c) => c.educationLevel))];
 
   const filtered = mockAdminCandidates.filter((c) => {
     const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
     if (search && !fullName.includes(search.toLowerCase()) && !c.email.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterWilaya !== "all" && c.wilaya !== filterWilaya) return false;
+    if (filterDomain !== "all" && c.fieldOfStudy !== filterDomain) return false;
+    if (filterEducation !== "all" && c.educationLevel !== filterEducation) return false;
     return true;
   });
 
@@ -60,11 +66,33 @@ export default function CandidatesListPage() {
                 ))}
               </SelectContent>
             </Select>
-            {(search !== "" || filterWilaya !== "all") && (
+            <Select value={filterDomain} onValueChange={setFilterDomain}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Domain" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Domains</SelectItem>
+                {domains.map((d) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterEducation} onValueChange={setFilterEducation}>
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder="Education" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Education</SelectItem>
+                {educationLevels.map((e) => (
+                  <SelectItem key={e} value={e}>{e}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(search !== "" || filterWilaya !== "all" || filterDomain !== "all" || filterEducation !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => { setSearch(""); setFilterWilaya("all"); }}
+                onClick={() => { setSearch(""); setFilterWilaya("all"); setFilterDomain("all"); setFilterEducation("all"); }}
                 className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 Reset
