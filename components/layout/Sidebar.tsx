@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -22,9 +23,15 @@ export function Sidebar({ items, title }: SidebarProps) {
   return (
     <aside className="w-64 min-h-screen bg-white border-r border-border flex flex-col">
       {/* Brand */}
-      <div className="h-14 sm:h-16 flex items-center px-4 sm:px-6 border-b border-border">
-        <Link href="/" className="text-xl font-bold text-cvision-green">
-          CVision
+      <div className="h-14 sm:h-16 flex items-center px-4 sm:px-6 bg-gradient-to-r from-emerald-500 to-blue-500">
+        <Link href="/">
+          <Image
+            src="/logo/logo_cvision_blanc.png"
+            alt="CVision"
+            width={110}
+            height={36}
+            className="object-contain"
+          />
         </Link>
       </div>
 
