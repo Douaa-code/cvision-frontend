@@ -30,6 +30,7 @@ import {
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { mockCompanyApplications } from "@/lib/mock-data/company";
 import { mockApplications } from "@/lib/mock-data/applications";
+import { mockJobs } from "@/lib/mock-data/jobs";
 import {
   staggerContainerVariants,
   staggerItemVariants,
@@ -43,9 +44,19 @@ const allApplications = [
   ),
 ];
 
+const jobDomainMap = Object.fromEntries(mockJobs.map((j) => [j.id, j.activityDomain]));
+
+const getMonthLabel = (date: Date) =>
+  date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
+const uniqueDomains = [...new Set(allApplications.map((a) => jobDomainMap[a.jobId]).filter(Boolean))];
+const uniqueMonths = [...new Set(allApplications.map((a) => getMonthLabel(a.appliedDate)))];
+
 export default function AdminApplicationsPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterDomain, setFilterDomain] = useState("all");
+  const [filterDate, setFilterDate] = useState("all");
 
   const pending = allApplications.filter((a) => a.currentStatus === "Pending");
   const accepted = allApplications.filter((a) => a.currentStatus === "Accepted");
@@ -53,6 +64,8 @@ export default function AdminApplicationsPage() {
 
   const filtered = allApplications.filter((a) => {
     if (filterStatus !== "all" && a.currentStatus !== filterStatus) return false;
+    if (filterDomain !== "all" && jobDomainMap[a.jobId] !== filterDomain) return false;
+    if (filterDate !== "all" && getMonthLabel(a.appliedDate) !== filterDate) return false;
     if (search) {
       const term = search.toLowerCase();
       if (!a.candidateName?.toLowerCase().includes(term) && !a.jobTitle?.toLowerCase().includes(term) && !a.companyName?.toLowerCase().includes(term)) return false;
@@ -117,11 +130,33 @@ export default function AdminApplicationsPage() {
                 <SelectItem value="Rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
-            {(search !== "" || filterStatus !== "all") && (
+            <Select value={filterDomain} onValueChange={setFilterDomain}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Domain" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Domains</SelectItem>
+                {uniqueDomains.map((d) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterDate} onValueChange={setFilterDate}>
+              <SelectTrigger className="w-full sm:w-36">
+                <SelectValue placeholder="Date" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Dates</SelectItem>
+                {uniqueMonths.map((m) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(search !== "" || filterStatus !== "all" || filterDomain !== "all" || filterDate !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => { setSearch(""); setFilterStatus("all"); }}
+                onClick={() => { setSearch(""); setFilterStatus("all"); setFilterDomain("all"); setFilterDate("all"); }}
                 className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 Reset
