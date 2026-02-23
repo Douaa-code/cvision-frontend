@@ -66,7 +66,7 @@ export default function CompanyDetailPage({
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">{company.activityDomain}</p>
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{company.wilaya}</span>
+                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{company.wilaya}{company.postalCode ? ` - ${company.postalCode}` : ""}</span>
                   <span className="flex items-center gap-1"><Mail className="w-4 h-4" />{company.professionalEmail}</span>
                   <span className="flex items-center gap-1"><Phone className="w-4 h-4" />{company.phoneNumber}</span>
                   {company.website && <span className="flex items-center gap-1"><Globe className="w-4 h-4" />{company.website}</span>}
