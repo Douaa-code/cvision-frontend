@@ -325,7 +325,7 @@ export default function CompanyRegisterPage() {
                             placeholder="Enter street address"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="col-span-2 space-y-2">
                           <Label htmlFor="postalCode">Postal Code</Label>
                           <Input
                             id="postalCode"
