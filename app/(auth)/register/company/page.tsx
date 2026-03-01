@@ -302,6 +302,13 @@ export default function CompanyRegisterPage() {
                         />
                       </div>
                       <div className="space-y-2">
+                        <Label htmlFor="streetAddress">Street Address</Label>
+                        <Input
+                          id="streetAddress"
+                          placeholder="Enter street address"
+                        />
+                      </div>
+                      <div className="space-y-2">
                         <Label>Wilaya</Label>
                         <Select onValueChange={handleWilayaChange} value={step1Form.watch("wilaya")}>
                           <SelectTrigger className={`w-full h-9 ${step1Form.formState.errors.wilaya ? "border-cvision-red" : ""}`}>
