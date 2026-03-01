@@ -60,7 +60,7 @@ const statusData = [
 const STATUS_COLORS = ["#00C897", "#FFC107", "#E74C3C"];
 
 const compatibilityData = mockApplications.map((a) => ({
-  name: a.jobTitle.length > 22 ? a.jobTitle.slice(0, 22) + "…" : a.jobTitle,
+  name: (a.jobTitle ?? "").length > 22 ? (a.jobTitle ?? "").slice(0, 22) + "…" : (a.jobTitle ?? ""),
   Score: a.compatibilityScore,
 }));
 
