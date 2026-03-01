@@ -301,21 +301,35 @@ export default function CompanyRegisterPage() {
                           {...step1Form.register("website")}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label>Wilaya</Label>
-                        <Select onValueChange={handleWilayaChange} value={step1Form.watch("wilaya")}>
-                          <SelectTrigger className={`w-full h-9 ${step1Form.formState.errors.wilaya ? "border-cvision-red" : ""}`}>
-                            <SelectValue placeholder="Select wilaya" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {WILAYAS.map((w) => (
-                              <SelectItem key={w.code} value={w.name}>{w.code} - {w.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {step1Form.formState.errors.wilaya && (
-                          <p className="text-xs text-cvision-red">{step1Form.formState.errors.wilaya.message}</p>
-                        )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Wilaya</Label>
+                          <Select onValueChange={handleWilayaChange} value={step1Form.watch("wilaya")}>
+                            <SelectTrigger className={`w-full h-9 ${step1Form.formState.errors.wilaya ? "border-cvision-red" : ""}`}>
+                              <SelectValue placeholder="Select wilaya" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {WILAYAS.map((w) => (
+                                <SelectItem key={w.code} value={w.name}>{w.code} - {w.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {step1Form.formState.errors.wilaya && (
+                            <p className="text-xs text-cvision-red">{step1Form.formState.errors.wilaya.message}</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="postalCode">Postal Code</Label>
+                          <Input
+                            id="postalCode"
+                            placeholder="16000"
+                            {...step1Form.register("postalCode")}
+                            className={step1Form.formState.errors.postalCode ? "border-cvision-red" : ""}
+                          />
+                          {step1Form.formState.errors.postalCode && (
+                            <p className="text-xs text-cvision-red">{step1Form.formState.errors.postalCode.message}</p>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="streetAddress">Street Address</Label>
@@ -323,18 +337,6 @@ export default function CompanyRegisterPage() {
                           id="streetAddress"
                           placeholder="Enter street address"
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="postalCode">Postal Code</Label>
-                        <Input
-                          id="postalCode"
-                          placeholder="16000"
-                          {...step1Form.register("postalCode")}
-                          className={step1Form.formState.errors.postalCode ? "border-cvision-red" : ""}
-                        />
-                        {step1Form.formState.errors.postalCode && (
-                          <p className="text-xs text-cvision-red">{step1Form.formState.errors.postalCode.message}</p>
-                        )}
                       </div>
                     </div>
                     <div className="space-y-2">
