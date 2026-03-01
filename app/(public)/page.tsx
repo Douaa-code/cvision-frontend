@@ -22,36 +22,6 @@ import {
   staggerContainerVariants,
   staggerItemVariants,
 } from "@/lib/animations/variants";
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-
-const growthData = [
-  { month: "Sep", Candidates: 80, Companies: 12 },
-  { month: "Oct", Candidates: 150, Companies: 22 },
-  { month: "Nov", Candidates: 310, Companies: 38 },
-  { month: "Dec", Candidates: 520, Companies: 65 },
-  { month: "Jan", Candidates: 870, Companies: 110 },
-  { month: "Feb", Candidates: 1200, Companies: 150 },
-];
-
-const domainData = [
-  { domain: "IT & Software", jobs: 145 },
-  { domain: "Marketing", jobs: 72 },
-  { domain: "Finance", jobs: 58 },
-  { domain: "Healthcare", jobs: 44 },
-  { domain: "Education", jobs: 67 },
-  { domain: "Engineering", jobs: 64 },
-];
 
 const features = [
   {
@@ -282,82 +252,6 @@ export default function HomePage() {
               );
             })}
           </motion.div>
-        </div>
-      </section>
-
-      {/* Platform at a Glance */}
-      <section className="py-20 px-4 bg-cvision-bg">
-        <div className="max-w-[1280px] mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-14"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Platform at a Glance
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              A fast-growing ecosystem connecting talent with opportunity across Algeria.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Monthly Growth */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6 }}
-              className="bg-white rounded-2xl border border-border p-6 shadow-sm"
-            >
-              <h3 className="font-semibold text-lg mb-1">Platform Growth</h3>
-              <p className="text-sm text-muted-foreground mb-6">Cumulative registrations over the last 6 months</p>
-              <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={growthData}>
-                  <defs>
-                    <linearGradient id="gradCandidates" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00C897" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#00C897" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gradCompanies" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }} />
-                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                  <Area type="monotone" dataKey="Candidates" stroke="#00C897" strokeWidth={2.5} fill="url(#gradCandidates)" dot={{ fill: "#00C897", r: 3, stroke: "white", strokeWidth: 2 }} />
-                  <Area type="monotone" dataKey="Companies" stroke="#3B82F6" strokeWidth={2.5} fill="url(#gradCompanies)" dot={{ fill: "#3B82F6", r: 3, stroke: "white", strokeWidth: 2 }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </motion.div>
-
-            {/* Jobs by Domain */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6 }}
-              className="bg-white rounded-2xl border border-border p-6 shadow-sm"
-            >
-              <h3 className="font-semibold text-lg mb-1">Job Offers by Domain</h3>
-              <p className="text-sm text-muted-foreground mb-6">Distribution of active offers across sectors</p>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={domainData} layout="vertical" barCategoryGap="25%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="domain" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} width={100} />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }} cursor={{ fill: "#F3F4F6" }} />
-                  <Bar dataKey="jobs" name="Job Offers" fill="#00C897" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </motion.div>
-          </div>
         </div>
       </section>
 
