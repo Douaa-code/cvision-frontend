@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MiniFooter } from "@/components/layout/MiniFooter";
 
 export const metadata: Metadata = {
   title: {
@@ -13,5 +14,10 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <MiniFooter />
+    </>
+  );
 }

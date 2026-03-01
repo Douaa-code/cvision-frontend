@@ -5,6 +5,8 @@ import { Menu, LogOut, User } from "lucide-react";
 import { Sidebar, type SidebarItem } from "./Sidebar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { MiniFooter } from "./MiniFooter";
+import { Footer } from "./Footer";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -84,6 +86,7 @@ export function DashboardLayout({
 
         {/* Page Content */}
         <main className="flex-1 p-3 sm:p-4 md:p-6">{children}</main>
+        <MiniFooter />
       </div>
     </div>
   );
