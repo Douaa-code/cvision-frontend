@@ -255,7 +255,7 @@ export default function CompanyRegisterPage() {
                       <div className="space-y-2">
                         <Label>Activity Domain</Label>
                         <Select onValueChange={(v) => step1Form.setValue("activityDomain", v)}>
-                          <SelectTrigger className={step1Form.formState.errors.activityDomain ? "border-cvision-red" : ""}>
+                          <SelectTrigger className={`w-full h-9 ${step1Form.formState.errors.activityDomain ? "border-cvision-red" : ""}`}>
                             <SelectValue placeholder="Select domain" />
                           </SelectTrigger>
                           <SelectContent>
@@ -304,7 +304,7 @@ export default function CompanyRegisterPage() {
                       <div className="space-y-2">
                         <Label>Wilaya</Label>
                         <Select onValueChange={handleWilayaChange} value={step1Form.watch("wilaya")}>
-                          <SelectTrigger className={step1Form.formState.errors.wilaya ? "border-cvision-red" : ""}>
+                          <SelectTrigger className={`w-full h-9 ${step1Form.formState.errors.wilaya ? "border-cvision-red" : ""}`}>
                             <SelectValue placeholder="Select wilaya" />
                           </SelectTrigger>
                           <SelectContent>
