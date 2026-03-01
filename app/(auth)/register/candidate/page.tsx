@@ -38,6 +38,7 @@ const candidateSchema = z
     confirmPassword: z.string(),
     wilaya: z.string().min(1, "Please select a wilaya"),
     postalCode: z.string().min(1, "Postal code is required"),
+    streetAddress: z.string().optional(),
     educationLevel: z.string().min(1, "Please select education level"),
     fieldOfStudy: z.string().min(1, "Please select field of study"),
     university: z.string().min(2, "University is required"),
@@ -283,6 +284,14 @@ export default function CandidateRegisterPage() {
                     {errors.postalCode && (
                       <p className="text-xs text-cvision-red">{errors.postalCode.message}</p>
                     )}
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="streetAddress">Street Address <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                    <Input
+                      id="streetAddress"
+                      placeholder="123 Rue Didouche Mourad"
+                      {...register("streetAddress")}
+                    />
                   </div>
                 </div>
               </div>
