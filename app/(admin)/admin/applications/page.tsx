@@ -208,7 +208,7 @@ export default function AdminApplicationsPage() {
                     <TableCell>
                       {app.testStatus ? (
                         <div>
-                          <StatusBadge status={app.testStatus === "Completed" ? "Passed" : app.testStatus} />
+                          <StatusBadge status={app.testStatus} />
                           {app.testScore !== undefined && (
                             <p className="text-xs text-muted-foreground mt-0.5">{app.testScore}%</p>
                           )}

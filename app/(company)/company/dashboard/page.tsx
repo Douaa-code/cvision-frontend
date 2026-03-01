@@ -333,7 +333,7 @@ export default function CompanyDashboard() {
                       </TableCell>
                       <TableCell>
                         {app.testStatus ? (
-                          <StatusBadge status={app.testStatus === "Completed" ? "Passed" : app.testStatus} />
+                          <StatusBadge status={app.testStatus} />
                         ) : (
                           <span className="text-xs text-muted-foreground">
                             Not started

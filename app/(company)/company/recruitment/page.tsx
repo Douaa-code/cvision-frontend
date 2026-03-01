@@ -150,7 +150,7 @@ export default function RecruitmentPage() {
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">{app.jobTitle}</p>
                   <div className="flex items-center justify-between">
-                    {app.testStatus && <StatusBadge status={app.testStatus === "Completed" ? "Passed" : app.testStatus} />}
+                    {app.testStatus && <StatusBadge status={app.testStatus} />}
                     <Link href={`/company/recruitment/${app.candidateId}`}>
                       <Button variant="ghost" size="sm"><Eye className="w-3 h-3" /></Button>
                     </Link>
