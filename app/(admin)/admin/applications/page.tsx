@@ -44,7 +44,7 @@ const allApplications = [
   ),
 ];
 
-const jobDomainMap = Object.fromEntries(mockJobs.map((j) => [j.id, j.activityDomain]));
+const jobDomainMap = Object.fromEntries(mockJobs.map((j) => [j.id, j.domain]));
 
 const getMonthLabel = (date: Date) =>
   date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
