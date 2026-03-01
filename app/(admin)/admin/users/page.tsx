@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Shield, Ban } from "lucide-react";
+import { Search, Shield, Ban, Eye, CheckCircle } from "lucide-react";
 import { mockAdminUsers } from "@/lib/mock-data/admin";
 
 const roleBadgeColors: Record<string, string> = {
@@ -201,16 +202,32 @@ export default function UsersManagementPage() {
                       {user.createdAt.toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      {user.role !== "admin" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSuspendDialog(user.id)}
-                          title={user.status === "Suspended" ? "Reactivate" : "Suspend"}
-                        >
-                          <Ban className={`w-4 h-4 ${user.status === "Suspended" ? "text-cvision-green" : "text-cvision-red"}`} />
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {user.role === "company" && (
+                          <Link href={`/admin/companies/${user.id.replace("-admin", "")}`}>
+                            <Button variant="ghost" size="sm" title="View profile">
+                              <Eye className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </Link>
+                        )}
+                        {user.role === "candidate" && (
+                          <Link href="/admin/candidates">
+                            <Button variant="ghost" size="sm" title="View profile">
+                              <Eye className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </Link>
+                        )}
+                        {user.role !== "admin" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSuspendDialog(user.id)}
+                            title={user.status === "Suspended" ? "Reactivate" : "Suspend"}
+                          >
+                            <Ban className={`w-4 h-4 ${user.status === "Suspended" ? "text-cvision-green" : "text-cvision-red"}`} />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
