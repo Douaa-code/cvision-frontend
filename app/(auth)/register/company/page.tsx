@@ -301,28 +301,30 @@ export default function CompanyRegisterPage() {
                           {...step1Form.register("website")}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="streetAddress">Street Address</Label>
-                        <Input
-                          id="streetAddress"
-                          placeholder="Enter street address"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Wilaya</Label>
-                        <Select onValueChange={handleWilayaChange} value={step1Form.watch("wilaya")}>
-                          <SelectTrigger className={`w-full h-9 ${step1Form.formState.errors.wilaya ? "border-cvision-red" : ""}`}>
-                            <SelectValue placeholder="Select wilaya" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {WILAYAS.map((w) => (
-                              <SelectItem key={w.code} value={w.name}>{w.code} - {w.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {step1Form.formState.errors.wilaya && (
-                          <p className="text-xs text-cvision-red">{step1Form.formState.errors.wilaya.message}</p>
-                        )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Wilaya</Label>
+                          <Select onValueChange={handleWilayaChange} value={step1Form.watch("wilaya")}>
+                            <SelectTrigger className={`w-full h-9 ${step1Form.formState.errors.wilaya ? "border-cvision-red" : ""}`}>
+                              <SelectValue placeholder="Select wilaya" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {WILAYAS.map((w) => (
+                                <SelectItem key={w.code} value={w.name}>{w.code} - {w.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {step1Form.formState.errors.wilaya && (
+                            <p className="text-xs text-cvision-red">{step1Form.formState.errors.wilaya.message}</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="streetAddress">Street Address</Label>
+                          <Input
+                            id="streetAddress"
+                            placeholder="Enter street address"
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="postalCode">Postal Code</Label>
