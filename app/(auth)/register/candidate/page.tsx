@@ -257,7 +257,7 @@ export default function CandidateRegisterPage() {
                   <div className="space-y-2">
                     <Label>Wilaya</Label>
                     <Select onValueChange={handleWilayaChange} value={selectedWilaya}>
-                      <SelectTrigger className={errors.wilaya ? "border-cvision-red" : ""}>
+                      <SelectTrigger className={`w-full h-9 ${errors.wilaya ? "border-cvision-red" : ""}`}>
                         <SelectValue placeholder="Select wilaya" />
                       </SelectTrigger>
                       <SelectContent>
@@ -296,7 +296,7 @@ export default function CandidateRegisterPage() {
                   <div className="space-y-2">
                     <Label>Education Level</Label>
                     <Select onValueChange={(v) => setValue("educationLevel", v)}>
-                      <SelectTrigger className={errors.educationLevel ? "border-cvision-red" : ""}>
+                      <SelectTrigger className={`w-full h-9 ${errors.educationLevel ? "border-cvision-red" : ""}`}>
                         <SelectValue placeholder="Select level" />
                       </SelectTrigger>
                       <SelectContent>
@@ -314,7 +314,7 @@ export default function CandidateRegisterPage() {
                   <div className="space-y-2">
                     <Label>Field of Study</Label>
                     <Select onValueChange={(v) => setValue("fieldOfStudy", v)}>
-                      <SelectTrigger className={errors.fieldOfStudy ? "border-cvision-red" : ""}>
+                      <SelectTrigger className={`w-full h-9 ${errors.fieldOfStudy ? "border-cvision-red" : ""}`}>
                         <SelectValue placeholder="Select domain" />
                       </SelectTrigger>
                       <SelectContent>
@@ -364,7 +364,7 @@ export default function CandidateRegisterPage() {
                 <div className="space-y-2">
                   <Label>Years of Experience</Label>
                   <Select onValueChange={(v) => setValue("yearsOfExperience", v)}>
-                    <SelectTrigger className={errors.yearsOfExperience ? "border-cvision-red" : ""}>
+                    <SelectTrigger className={`w-full h-9 ${errors.yearsOfExperience ? "border-cvision-red" : ""}`}>
                       <SelectValue placeholder="Select experience" />
                     </SelectTrigger>
                     <SelectContent>
