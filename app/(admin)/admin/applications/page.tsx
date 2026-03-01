@@ -96,7 +96,7 @@ export default function AdminApplicationsPage() {
           return (
             <motion.div key={stat.label} variants={staggerItemVariants}>
               <Card>
-                <CardContent className={`p-6 ${stat.bg} rounded-lg`}>
+                <CardContent className="p-6">
                   <div className="flex items-center gap-3">
                     <Icon className={`w-6 h-6 ${stat.color}`} />
                     <div>
