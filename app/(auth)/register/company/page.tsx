@@ -35,6 +35,7 @@ import {
   Check,
   Upload,
   X,
+  Info,
 } from "lucide-react";
 import { WILAYAS, getPostalCodeByWilaya } from "@/lib/constants/wilayas";
 import { DomainEnum } from "@/types/enums";
@@ -632,10 +633,11 @@ export default function CompanyRegisterPage() {
                     </div>
                   </form>
 
-                  <div className="mt-4 p-3 bg-cvision-yellow-bg rounded-lg">
-                    <p className="text-xs text-cvision-yellow font-medium">
+                  <div className="mt-6 p-5 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
+                    <Info className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                    <p className="text-sm font-semibold text-orange-700 leading-relaxed">
                       After submission, your company will be reviewed by our
-                      admin team. Approval takes 1-3 business days.
+                      admin team. Approval takes 1–3 business days.
                     </p>
                   </div>
                 </motion.div>
