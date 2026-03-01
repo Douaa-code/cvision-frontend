@@ -33,9 +33,21 @@ import { Search, Shield, Ban } from "lucide-react";
 import { mockAdminUsers } from "@/lib/mock-data/admin";
 
 const roleBadgeColors: Record<string, string> = {
-  admin: "bg-cvision-blue/10 text-cvision-blue border-cvision-blue/30",
-  candidate: "bg-cvision-green-bg text-cvision-green border-cvision-green/30",
-  company: "bg-cvision-yellow-bg text-cvision-yellow border-cvision-yellow/30",
+  admin: "bg-blue-100 text-blue-700 border-blue-200",
+  candidate: "bg-purple-100 text-purple-700 border-purple-200",
+  company: "bg-amber-100 text-amber-700 border-amber-200",
+};
+
+const lastLoginMap: Record<string, Date> = {
+  admin1: new Date("2026-03-01"),
+  u1: new Date("2026-02-28"),
+  u2: new Date("2026-02-27"),
+  u3: new Date("2026-02-25"),
+  u4: new Date("2026-02-20"),
+  "c1-admin": new Date("2026-02-26"),
+  "c2-admin": new Date("2026-02-24"),
+  "c6-admin": new Date("2026-02-15"),
+  "c8-admin": new Date("2026-01-20"),
 };
 
 const statusColors: Record<string, string> = {
@@ -154,6 +166,7 @@ export default function UsersManagementPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Last Login</TableHead>
                   <TableHead>Registered</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -180,6 +193,9 @@ export default function UsersManagementPage() {
                       <span className={`text-xs font-medium px-2 py-1 rounded ${statusColors[user.status]}`}>
                         {user.status}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {lastLoginMap[user.id]?.toLocaleDateString() ?? "—"}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {user.createdAt.toLocaleDateString()}
