@@ -325,18 +325,18 @@ export default function CompanyRegisterPage() {
                             placeholder="Enter street address"
                           />
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="postalCode">Postal Code</Label>
-                        <Input
-                          id="postalCode"
-                          placeholder="16000"
-                          {...step1Form.register("postalCode")}
-                          className={step1Form.formState.errors.postalCode ? "border-cvision-red" : ""}
-                        />
-                        {step1Form.formState.errors.postalCode && (
-                          <p className="text-xs text-cvision-red">{step1Form.formState.errors.postalCode.message}</p>
-                        )}
+                        <div className="space-y-2">
+                          <Label htmlFor="postalCode">Postal Code</Label>
+                          <Input
+                            id="postalCode"
+                            placeholder="16000"
+                            {...step1Form.register("postalCode")}
+                            className={step1Form.formState.errors.postalCode ? "border-cvision-red" : ""}
+                          />
+                          {step1Form.formState.errors.postalCode && (
+                            <p className="text-xs text-cvision-red">{step1Form.formState.errors.postalCode.message}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="space-y-2">
