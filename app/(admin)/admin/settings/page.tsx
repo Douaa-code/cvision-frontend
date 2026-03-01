@@ -35,7 +35,6 @@ export default function AdminSettingsPage() {
   // Notifications
   const [notifyNewCompany, setNotifyNewCompany] = useState(true);
   const [notifyNewCandidate, setNotifyNewCandidate] = useState(false);
-  const [weeklyReport, setWeeklyReport] = useState(true);
 
   // Security
   const [currentPassword, setCurrentPassword] = useState("");
@@ -177,13 +176,6 @@ export default function AdminSettingsPage() {
                 <div>
                   <Label htmlFor="notifCandidate" className="cursor-pointer">New candidate registration</Label>
                   <p className="text-xs text-muted-foreground">Get notified when a new candidate signs up.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Checkbox id="notifWeekly" checked={weeklyReport} onCheckedChange={(c) => setWeeklyReport(c === true)} />
-                <div>
-                  <Label htmlFor="notifWeekly" className="cursor-pointer">Weekly platform report</Label>
-                  <p className="text-xs text-muted-foreground">Receive a weekly summary of platform activity.</p>
                 </div>
               </div>
             </div>
