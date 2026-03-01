@@ -329,7 +329,7 @@ export default function CompanyRegisterPage() {
                           <p className="text-xs text-cvision-red">{step1Form.formState.errors.postalCode.message}</p>
                         )}
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="streetAddress">Street Address</Label>
                         <Input
                           id="streetAddress"
