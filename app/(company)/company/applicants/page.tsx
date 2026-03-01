@@ -205,7 +205,7 @@ export default function ApplicantsPage() {
                           )}
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground">N/A</span>
+                        <span className="text-xs text-muted-foreground">Not started</span>
                       )}
                     </TableCell>
                     <TableCell>
