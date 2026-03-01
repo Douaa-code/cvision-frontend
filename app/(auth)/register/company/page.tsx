@@ -330,13 +330,13 @@ export default function CompanyRegisterPage() {
                             <p className="text-xs text-cvision-red">{step1Form.formState.errors.postalCode.message}</p>
                           )}
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="streetAddress">Street Address</Label>
-                        <Input
-                          id="streetAddress"
-                          placeholder="Enter street address"
-                        />
+                        <div className="col-span-2 space-y-2">
+                          <Label htmlFor="streetAddress">Street Address</Label>
+                          <Input
+                            id="streetAddress"
+                            placeholder="Enter street address"
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="space-y-2">
