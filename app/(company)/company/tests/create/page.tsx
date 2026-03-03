@@ -139,7 +139,7 @@ export default function CreateTestPage() {
           <Separator className="mb-4" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <Label>Job Offer</Label>
               <Select value={jobOffer} onValueChange={setJobOffer}>
                 <SelectTrigger><SelectValue placeholder="Choose Job Offer" /></SelectTrigger>
@@ -149,10 +149,6 @@ export default function CreateTestPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label>Test Name *</Label>
-              <Input value={testName} onChange={(e) => setTestName(e.target.value)} placeholder="e.g. PHP Developer Assessment" />
             </div>
             <div className="space-y-2">
               <Label>Domain *</Label>
@@ -164,6 +160,10 @@ export default function CreateTestPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Test Name *</Label>
+              <Input value={testName} onChange={(e) => setTestName(e.target.value)} placeholder="e.g. PHP Developer Assessment" />
             </div>
             <div className="space-y-2">
               <Label>Duration (minutes) *</Label>
