@@ -6,6 +6,7 @@ import {
   Search,
   ClipboardCheck,
   GraduationCap,
+  MessageCircle,
   Settings,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -17,6 +18,7 @@ const candidateSidebarItems: SidebarItem[] = [
   { label: "Job Search", href: "/jobs", icon: Search },
   { label: "Tests", href: "/tests", icon: ClipboardCheck },
   { label: "Training", href: "/training", icon: GraduationCap },
+  { label: "Messages", href: "/messages", icon: MessageCircle },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

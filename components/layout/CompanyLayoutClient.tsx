@@ -9,6 +9,7 @@ import {
   UserCheck,
   ClipboardCheck,
   GraduationCap,
+  MessageCircle,
   Settings,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -25,6 +26,7 @@ const companySidebarItems: SidebarItem[] = [
   { label: "Create Test", href: "/company/tests/create", icon: ClipboardCheck },
   { label: "Training", href: "/company/training", icon: GraduationCap },
   { label: "Create Training", href: "/company/training/create", icon: GraduationCap },
+  { label: "Messages", href: "/company/messages", icon: MessageCircle },
   { label: "Settings", href: "/company/settings", icon: Settings },
 ];
 
