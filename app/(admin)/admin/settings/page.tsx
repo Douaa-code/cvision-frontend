@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Settings, Bell, Shield, Globe, Check } from "lucide-react";
+import { useSettingsStore } from "@/lib/stores/settingsStore";
 
 const tabs = [
   { id: "general", label: "General", icon: Settings },
@@ -24,13 +25,13 @@ export default function AdminSettingsPage() {
   const [saved, setSaved] = useState(false);
 
   // General
-  const [platformName, setPlatformName] = useState("CVision");
+  const { footerText, setFooterText } = useSettingsStore();
+  const [footerTextDraft, setFooterTextDraft] = useState(footerText);
   const [supportEmail, setSupportEmail] = useState("support@cvision.dz");
 
   // Platform
-  const [autoApprove, setAutoApprove] = useState(false);
   const [maxJobsPerCompany, setMaxJobsPerCompany] = useState("20");
-  const [requireTestForJobs, setRequireTestForJobs] = useState(false);
+  const [maxApplicantsPerJob, setMaxApplicantsPerJob] = useState("100");
 
   // Notifications
   const [notifyNewCompany, setNotifyNewCompany] = useState(true);
@@ -43,6 +44,7 @@ export default function AdminSettingsPage() {
   const [passwordError, setPasswordError] = useState("");
 
   const handleSave = () => {
+    setFooterText(footerTextDraft);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -103,8 +105,8 @@ export default function AdminSettingsPage() {
             <Separator />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Platform Name</Label>
-                <Input value={platformName} onChange={(e) => setPlatformName(e.target.value)} />
+                <Label>Footer Text</Label>
+                <Input value={footerTextDraft} onChange={(e) => setFooterTextDraft(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Support Email</Label>
@@ -128,23 +130,13 @@ export default function AdminSettingsPage() {
             </div>
             <Separator />
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Checkbox id="autoApprove" checked={autoApprove} onCheckedChange={(c) => setAutoApprove(c === true)} />
-                <div>
-                  <Label htmlFor="autoApprove" className="cursor-pointer">Auto-approve companies</Label>
-                  <p className="text-xs text-muted-foreground">Skip manual review for new company registrations.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Checkbox id="requireTest" checked={requireTestForJobs} onCheckedChange={(c) => setRequireTestForJobs(c === true)} />
-                <div>
-                  <Label htmlFor="requireTest" className="cursor-pointer">Require test for all jobs</Label>
-                  <p className="text-xs text-muted-foreground">Force companies to link a test to every job offer.</p>
-                </div>
-              </div>
               <div className="max-w-xs space-y-2">
                 <Label>Max job offers per company</Label>
                 <Input value={maxJobsPerCompany} onChange={(e) => setMaxJobsPerCompany(e.target.value)} />
+              </div>
+              <div className="max-w-xs space-y-2">
+                <Label>Max applicants per job offer</Label>
+                <Input value={maxApplicantsPerJob} onChange={(e) => setMaxApplicantsPerJob(e.target.value)} />
               </div>
             </div>
             <div className="flex justify-end">

@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useSettingsStore } from "@/lib/stores/settingsStore";
 
 export function Footer() {
+  const { footerText } = useSettingsStore();
   return (
     <footer className="bg-white border-t border-border text-foreground">
       <div className="max-w-[1280px] mx-auto px-4 py-8 sm:py-12">
@@ -76,7 +80,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          &copy; 2026 CVision. All rights reserved.
+          {footerText}
         </div>
       </div>
     </footer>
