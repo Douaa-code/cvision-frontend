@@ -60,12 +60,6 @@ const statusData = [
 ];
 const STATUS_COLORS = ["#00C897", "#FFC107", "#E74C3C"];
 
-const scoreRanges = [
-  { range: "< 60", count: mockCompanyApplications.filter((a) => a.compatibilityScore < 60).length },
-  { range: "60–79", count: mockCompanyApplications.filter((a) => a.compatibilityScore >= 60 && a.compatibilityScore < 80).length },
-  { range: "80–100", count: mockCompanyApplications.filter((a) => a.compatibilityScore >= 80).length },
-];
-
 const appsPerJob = companyJobs.map((job) => ({
   name: job.jobTitle.length > 20 ? job.jobTitle.slice(0, 20) + "…" : job.jobTitle,
   Applications: job.applicationsCount,
@@ -139,7 +133,7 @@ export default function CompanyDashboard() {
       </motion.div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Application Status */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -171,32 +165,6 @@ export default function CompanyDashboard() {
                   />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Score Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-        >
-          <Card className="h-full">
-            <CardContent className="p-6">
-              <h2 className="font-semibold text-lg mb-1">Score Distribution</h2>
-              <p className="text-sm text-muted-foreground mb-2">Compatibility score ranges</p>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={scoreRanges} barCategoryGap="40%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                  <XAxis dataKey="range" tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }}
-                    cursor={{ fill: "#F3F4F6" }}
-                  />
-                  <Bar dataKey="count" name="Candidates" fill="#00C897" radius={[4, 4, 0, 0]} />
-                </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
