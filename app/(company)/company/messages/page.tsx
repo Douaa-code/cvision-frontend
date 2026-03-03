@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, Paperclip, Smile, PenSquare } from "lucide-react";
+import { Send, Paperclip, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mockCompanyConversations, type Conversation } from "@/lib/mock-data/messages";
 
@@ -47,14 +47,6 @@ export default function CompanyMessagesPage() {
       <div className="flex flex-1 border border-border rounded-xl overflow-hidden bg-white min-h-0">
         {/* Left: Conversation List */}
         <div className="w-72 border-r border-border flex flex-col shrink-0">
-          {/* New message button */}
-          <div className="px-4 py-3 border-b border-border shrink-0">
-            <Button size="sm" className="w-full bg-cvision-green hover:bg-cvision-green/90 text-white">
-              <PenSquare className="w-4 h-4 mr-2" />
-              New Message
-            </Button>
-          </div>
-
           <div className="overflow-y-auto flex-1">
             {conversations.map((conv) => {
               const isActive = conv.id === selectedId;
