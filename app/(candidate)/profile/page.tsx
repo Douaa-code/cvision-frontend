@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, X, Plus, FileText } from "lucide-react";
+import { User, X, Plus, FileText, ExternalLink, Upload } from "lucide-react";
 import { mockCandidate } from "@/lib/mock-data/candidate";
 import { WILAYAS } from "@/lib/constants/wilayas";
 import { DomainEnum, EducationEnum, ExperienceEnum } from "@/types/enums";
+
+type Certificate = {
+  id: string;
+  name: string;
+  url: string;
+};
 
 const LANGUAGE_OPTIONS = ["Arabic", "French", "English", "Tamazight", "Spanish", "German"];
 const PROFICIENCY_LEVELS = ["Native", "Fluent", "Intermediate"] as const;
@@ -26,6 +32,33 @@ export default function ProfilePage() {
   const [skillInput, setSkillInput] = useState("");
   const [langName, setLangName] = useState("");
   const [langLevel, setLangLevel] = useState<string>("Intermediate");
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const certInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      certificates.forEach((c) => URL.revokeObjectURL(c.url));
+    };
+  }, []);
+
+  const handleAddCertificates = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    const newCerts = files.map((file) => ({
+      id: crypto.randomUUID(),
+      name: file.name,
+      url: URL.createObjectURL(file),
+    }));
+    setCertificates((prev) => [...prev, ...newCerts]);
+    e.target.value = "";
+  };
+
+  const removeCertificate = (id: string) => {
+    setCertificates((prev) => {
+      const cert = prev.find((c) => c.id === id);
+      if (cert) URL.revokeObjectURL(cert.url);
+      return prev.filter((c) => c.id !== id);
+    });
+  };
 
   const updateField = (field: string, value: string | number) => {
     setCandidate((prev) => ({ ...prev, [field]: value }));
@@ -242,13 +275,59 @@ export default function ProfilePage() {
         {/* Graduation Certificate */}
         <Card>
           <CardContent className="p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Graduation Certificate</h2>
-            <div className="flex items-center gap-3 p-3 bg-cvision-container rounded-lg border border-border">
-              <FileText className="w-5 h-5 text-cvision-green flex-shrink-0" />
-              <div>
-                <p className="text-sm font-medium">graduation_certificate.pdf</p>
-                <p className="text-xs text-muted-foreground">Uploaded during registration</p>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Graduation Certificate</h2>
+              <Button variant="outline" size="sm" onClick={() => certInputRef.current?.click()}>
+                <Upload className="w-4 h-4 mr-2" />
+                Add Certificate
+              </Button>
+              <input
+                ref={certInputRef}
+                type="file"
+                accept=".pdf,image/*"
+                multiple
+                className="hidden"
+                onChange={handleAddCertificates}
+              />
+            </div>
+
+            <div className="space-y-2">
+              {/* Static original certificate */}
+              <div className="flex items-center gap-3 p-3 bg-cvision-container rounded-lg border border-border">
+                <FileText className="w-5 h-5 text-cvision-green flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">graduation_certificate.pdf</p>
+                  <p className="text-xs text-muted-foreground">Uploaded during registration</p>
+                </div>
               </div>
+
+              {/* Uploaded certificates */}
+              {certificates.map((cert) => (
+                <div key={cert.id} className="flex items-center gap-3 p-3 bg-cvision-container rounded-lg border border-border">
+                  <FileText className="w-5 h-5 text-cvision-green flex-shrink-0" />
+                  <p className="text-sm font-medium flex-1 min-w-0 truncate">{cert.name}</p>
+                  <a
+                    href={cert.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-cvision-green transition-colors flex-shrink-0"
+                    title="View"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                  <button
+                    onClick={() => removeCertificate(cert.id)}
+                    className="text-muted-foreground hover:text-cvision-red transition-colors flex-shrink-0"
+                    title="Delete"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+
+              {certificates.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-2">No additional certificates uploaded.</p>
+              )}
             </div>
           </CardContent>
         </Card>
