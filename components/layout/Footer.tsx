@@ -56,14 +56,6 @@ export function Footer() {
                   Register as Candidate
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/jobs"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Browse Jobs
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -77,14 +69,6 @@ export function Footer() {
                   className="hover:text-foreground transition-colors"
                 >
                   Register as Company
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/company/dashboard"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Company Dashboard
                 </Link>
               </li>
             </ul>
