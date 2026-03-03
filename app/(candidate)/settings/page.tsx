@@ -16,11 +16,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { User, Bell, Shield, AlertTriangle, Check } from "lucide-react";
-import { mockCandidate } from "@/lib/mock-data/candidate";
+import { Bell, Shield, AlertTriangle, Check } from "lucide-react";
 
 const tabs = [
-  { id: "profile", label: "Profile", icon: User },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "security", label: "Security", icon: Shield },
   { id: "account", label: "Account", icon: AlertTriangle },
@@ -29,15 +27,8 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("profile");
+  const [activeTab, setActiveTab] = useState<TabId>("notifications");
   const [saved, setSaved] = useState(false);
-
-  // Profile state
-  const [fullName, setFullName] = useState(
-    `${mockCandidate.firstName} ${mockCandidate.lastName}`
-  );
-  const [email, setEmail] = useState(mockCandidate.email);
-  const [phone, setPhone] = useState(mockCandidate.phoneNumber);
 
   // Notifications state
   const [emailAppAccepted, setEmailAppAccepted] = useState(true);
@@ -113,53 +104,6 @@ export default function SettingsPage() {
           <Check className="w-4 h-4" />
           Changes saved successfully.
         </motion.div>
-      )}
-
-      {/* Profile Tab */}
-      {activeTab === "profile" && (
-        <Card>
-          <CardContent className="p-6 space-y-6">
-            <div>
-              <h2 className="font-semibold text-lg mb-1">Profile Settings</h2>
-              <p className="text-sm text-muted-foreground">
-                Update your personal information.
-              </p>
-            </div>
-            <Separator />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleSaveProfile}>Save Changes</Button>
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* Notifications Tab */}
