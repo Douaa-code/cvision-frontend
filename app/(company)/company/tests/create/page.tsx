@@ -142,7 +142,7 @@ export default function CreateTestPage() {
             <div className="space-y-2">
               <Label>Job Offer</Label>
               <Select value={jobOffer} onValueChange={setJobOffer}>
-                <SelectTrigger><SelectValue placeholder="Choose Job Offer" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Choose Job Offer" /></SelectTrigger>
                 <SelectContent>
                   {companyJobs.map((j) => (
                     <SelectItem key={j.id} value={j.id}>{j.jobTitle}</SelectItem>
@@ -153,7 +153,7 @@ export default function CreateTestPage() {
             <div className="space-y-2">
               <Label>Domain *</Label>
               <Select value={domain} onValueChange={setDomain}>
-                <SelectTrigger><SelectValue placeholder="Select domain" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select domain" /></SelectTrigger>
                 <SelectContent>
                   {DOMAINS.map((d) => (
                     <SelectItem key={d} value={d}>{d}</SelectItem>
