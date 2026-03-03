@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Banknote, Bookmark, BookmarkCheck } from "lucide-react";
+import { MapPin, Banknote, Bookmark, BookmarkCheck, Briefcase, Tag } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { MatchScore } from "./MatchScore";
 import type { JobOffer } from "@/types";
 
@@ -50,9 +49,15 @@ export function JobCard({ job, onToggleSave }: JobCardProps) {
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Badge variant="secondary">{job.contractType}</Badge>
-        <Badge variant="secondary">{job.domain}</Badge>
+      <div className="flex flex-wrap gap-3 mb-4 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <Briefcase className="w-3.5 h-3.5" />
+          {job.contractType}
+        </span>
+        <span className="flex items-center gap-1">
+          <Tag className="w-3.5 h-3.5" />
+          {job.domain}
+        </span>
       </div>
 
       <div className="flex items-center justify-between pt-3 border-t border-border">

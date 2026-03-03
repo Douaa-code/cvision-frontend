@@ -115,16 +115,7 @@ export default function HomePage() {
           },
           "-=0.4"
         )
-        .from(
-          ".hero-stats",
-          {
-            opacity: 0,
-            y: 20,
-            duration: 0.6,
-            ease: "power3.out",
-          },
-          "-=0.2"
-        );
+;
     }, heroRef);
 
     return () => ctx.revert();
@@ -168,7 +159,7 @@ export default function HomePage() {
             AI-powered recruitment platform with smart job matching , CV analysis , online tests , and training programs.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <Link href="/jobs" className="hero-cta">
+            <Link href="/register/candidate" className="hero-cta">
               <Button size="lg" className="h-12 px-8 text-base gap-2">
                 Job Search
                 <ArrowRight className="w-4 h-4" />
@@ -185,22 +176,6 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Stats */}
-          <div className="hero-stats flex flex-wrap justify-center gap-8 md:gap-16">
-            {[
-              { value: "1,200+", label: "Candidates" },
-              { value: "150+", label: "Verified Companies" },
-              { value: "450+", label: "Job Offers" },
-              { value: "58", label: "Wilayas" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-cvision-green">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 

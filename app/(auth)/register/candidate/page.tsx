@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, EyeOff, Loader2, X } from "lucide-react";
+import { Eye, EyeOff, Loader2, X, Upload, FileText } from "lucide-react";
 import { WILAYAS, getPostalCodeByWilaya } from "@/lib/constants/wilayas";
 import { DomainEnum, EducationEnum, ExperienceEnum } from "@/types/enums";
 import { ArrowLeft } from "lucide-react";
@@ -82,6 +82,7 @@ export default function CandidateRegisterPage() {
   >([]);
   const [langName, setLangName] = useState("");
   const [langLevel, setLangLevel] = useState<(typeof PROFICIENCY_LEVELS)[number]>("Intermediate");
+  const [graduationCert, setGraduationCert] = useState<File | null>(null);
 
   const {
     register,
@@ -486,6 +487,35 @@ export default function CandidateRegisterPage() {
                       </span>
                     ))}
                   </div>
+                )}
+              </div>
+
+              {/* Graduation Certificate */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">
+                  Graduation Certificate
+                </h3>
+                {graduationCert ? (
+                  <div className="flex items-center justify-between bg-cvision-green-bg rounded-lg p-3">
+                    <span className="text-sm text-cvision-green flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      {graduationCert.name}
+                    </span>
+                    <button type="button" onClick={() => setGraduationCert(null)}>
+                      <X className="w-4 h-4 text-cvision-red" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-cvision-green transition-colors">
+                    <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">Click to upload (Image or PDF)</span>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => setGraduationCert(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
                 )}
               </div>
 

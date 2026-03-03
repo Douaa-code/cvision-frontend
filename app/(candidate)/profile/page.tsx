@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, X, Plus } from "lucide-react";
+import { User, X, Plus, FileText } from "lucide-react";
 import { mockCandidate } from "@/lib/mock-data/candidate";
 import { WILAYAS } from "@/lib/constants/wilayas";
 import { DomainEnum, EducationEnum, ExperienceEnum } from "@/types/enums";
@@ -235,6 +235,20 @@ export default function ProfilePage() {
                   <button onClick={() => removeLanguage(lang.name)}><X className="w-3 h-3 text-muted-foreground" /></button>
                 </span>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Graduation Certificate */}
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Graduation Certificate</h2>
+            <div className="flex items-center gap-3 p-3 bg-cvision-container rounded-lg border border-border">
+              <FileText className="w-5 h-5 text-cvision-green flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium">graduation_certificate.pdf</p>
+                <p className="text-xs text-muted-foreground">Uploaded during registration</p>
+              </div>
             </div>
           </CardContent>
         </Card>

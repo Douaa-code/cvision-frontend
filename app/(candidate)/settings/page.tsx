@@ -42,8 +42,6 @@ export default function SettingsPage() {
   // Notifications state
   const [emailAppAccepted, setEmailAppAccepted] = useState(true);
   const [emailAppRejected, setEmailAppRejected] = useState(true);
-  const [emailNewJobMatch, setEmailNewJobMatch] = useState(false);
-
   // Security state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -186,13 +184,6 @@ export default function SettingsPage() {
                 <div>
                   <Label htmlFor="notifRejected" className="cursor-pointer">Application Rejected</Label>
                   <p className="text-xs text-muted-foreground">Get notified when a company declines your application.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Checkbox id="notifJobMatch" checked={emailNewJobMatch} onCheckedChange={(c) => setEmailNewJobMatch(c === true)} />
-                <div>
-                  <Label htmlFor="notifJobMatch" className="cursor-pointer">New Job Match</Label>
-                  <p className="text-xs text-muted-foreground">Get notified when a new job matches your profile.</p>
                 </div>
               </div>
             </div>

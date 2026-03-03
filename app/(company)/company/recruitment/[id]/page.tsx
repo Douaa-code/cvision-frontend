@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   XCircle,
   ClipboardCheck,
+  FileText,
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { MatchScore } from "@/components/shared/MatchScore";
@@ -160,6 +161,19 @@ export default function RecruitmentDetailPage({
                       {lang.name} ({lang.level})
                     </Badge>
                   ))}
+                </div>
+              </div>
+
+              <Separator className="my-4" />
+
+              <div>
+                <p className="text-sm font-medium mb-2">Graduation Certificate</p>
+                <div className="flex items-center gap-3 p-3 bg-cvision-container rounded-lg border border-border">
+                  <FileText className="w-4 h-4 text-cvision-green flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">graduation_certificate.pdf</p>
+                    <p className="text-xs text-muted-foreground">Uploaded by candidate</p>
+                  </div>
                 </div>
               </div>
             </CardContent>

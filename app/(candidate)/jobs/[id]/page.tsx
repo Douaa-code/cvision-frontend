@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   MapPin,
@@ -17,6 +16,9 @@ import {
   BookmarkCheck,
   CheckCircle2,
   ArrowLeft,
+  Tag,
+  GraduationCap,
+  ClipboardCheck,
 } from "lucide-react";
 import { MatchScore } from "@/components/shared/MatchScore";
 import { JobCard } from "@/components/shared/JobCard";
@@ -74,10 +76,14 @@ export default function JobDetailPage({
                 <span className="flex items-center gap-1"><Users className="w-4 h-4" />{job.applicationsCount} applicants</span>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{job.domain}</Badge>
-                <Badge variant="secondary">{job.experienceRequired}</Badge>
-                {job.requireQCMTest && <Badge variant="outline">Test Required</Badge>}
+              <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1"><Tag className="w-4 h-4" />{job.domain}</span>
+                <span className="flex items-center gap-1"><GraduationCap className="w-4 h-4" />{job.experienceRequired}</span>
+                {job.requireQCMTest && (
+                  <span className="flex items-center gap-1 text-cvision-green font-medium">
+                    <ClipboardCheck className="w-4 h-4" />Test Required
+                  </span>
+                )}
               </div>
             </CardContent>
           </Card>
