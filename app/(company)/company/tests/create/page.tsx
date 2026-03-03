@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2, CheckCircle2, GripVertical, ClipboardList } from "lucide-react";
 import { DOMAINS } from "@/lib/constants/domains";
+import { mockJobs } from "@/lib/mock-data/jobs";
+
+const companyJobs = mockJobs.filter((j) => j.companyId === "c1");
 
 type QuestionDraft = {
   id: string;
@@ -44,6 +47,7 @@ export default function CreateTestPage() {
   const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
 
+  const [jobOffer, setJobOffer] = useState("");
   const [testName, setTestName] = useState("");
   const [domain, setDomain] = useState("");
   const [description, setDescription] = useState("");
@@ -135,6 +139,17 @@ export default function CreateTestPage() {
           <Separator className="mb-4" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Job Offer</Label>
+              <Select value={jobOffer} onValueChange={setJobOffer}>
+                <SelectTrigger><SelectValue placeholder="Choose Job Offer" /></SelectTrigger>
+                <SelectContent>
+                  {companyJobs.map((j) => (
+                    <SelectItem key={j.id} value={j.id}>{j.jobTitle}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Test Name *</Label>
               <Input value={testName} onChange={(e) => setTestName(e.target.value)} placeholder="e.g. PHP Developer Assessment" />
