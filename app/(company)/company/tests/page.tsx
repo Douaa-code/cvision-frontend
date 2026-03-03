@@ -12,10 +12,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, ClipboardList, Clock, Target, HelpCircle } from "lucide-react";
+import { Plus, ClipboardList, Clock, Target, HelpCircle, Users, Trophy } from "lucide-react";
 import { mockTests } from "@/lib/mock-data/tests";
+import { mockCompanyApplications } from "@/lib/mock-data/company";
+import {
+  staggerContainerVariants,
+  staggerItemVariants,
+} from "@/lib/animations/variants";
 
 const companyTests = mockTests.filter((t) => t.companyId === "c1");
+const totalTested = mockCompanyApplications.filter((a) => a.testStatus != null).length;
+const totalPassed = mockCompanyApplications.filter((a) => a.testStatus === "Passed").length;
+
+const stats = [
+  { label: "Total Tests", value: companyTests.length, icon: ClipboardList, color: "text-cvision-blue" },
+  { label: "Total Applicants Tested", value: totalTested, icon: Users, color: "text-cvision-yellow" },
+  { label: "Total Applicants Passed Test", value: totalPassed, icon: Trophy, color: "text-cvision-green" },
+];
 
 export default function CompanyTestsPage() {
   return (
@@ -31,32 +44,31 @@ export default function CompanyTestsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{companyTests.length}</p>
-            <p className="text-sm text-muted-foreground">Total Tests</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-cvision-green">
-              {companyTests.reduce((acc, t) => acc + t.numberOfQuestions, 0)}
-            </p>
-            <p className="text-sm text-muted-foreground">Total Questions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-cvision-blue">
-              {companyTests.length > 0
-                ? Math.round(companyTests.reduce((acc, t) => acc + t.duration, 0) / companyTests.length)
-                : 0} min
-            </p>
-            <p className="text-sm text-muted-foreground">Avg. Duration</p>
-          </CardContent>
-        </Card>
-      </div>
+      <motion.div
+        variants={staggerContainerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"
+      >
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <motion.div key={stat.label} variants={staggerItemVariants}>
+              <Card>
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className={`p-3 rounded-lg bg-cvision-container ${stat.color}`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stat.value}</p>
+                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </motion.div>
 
       {/* Tests Table */}
       <Card>
@@ -87,7 +99,11 @@ export default function CompanyTestsPage() {
                 </TableHeader>
                 <TableBody>
                   {companyTests.map((test) => (
-                    <TableRow key={test.id}>
+                    <TableRow
+                      key={test.id}
+                      className="cursor-pointer hover:bg-cvision-container transition-colors"
+                      onClick={() => window.location.href = `/company/tests/${test.id}`}
+                    >
                       <TableCell className="max-w-[250px]">
                         <div className="overflow-hidden">
                           <p className="font-medium truncate">{test.testName}</p>
