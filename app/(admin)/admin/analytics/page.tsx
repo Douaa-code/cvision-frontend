@@ -140,18 +140,18 @@ export default function AnalyticsPage() {
         >
           <Card className="h-full">
             <CardContent className="p-6">
-              <h2 className="font-semibold text-lg mb-1">Applications by Domain</h2>
-              <p className="text-sm text-muted-foreground mb-4">Distribution across activity domains</p>
+              <h2 className="font-semibold text-lg mb-0.5">Top 5 Domains</h2>
+              <p className="text-sm text-muted-foreground mb-4">Job Offers by Industry Domain</p>
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={domainData} layout="vertical" barCategoryGap="25%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} width={90} />
+                <BarChart data={domainData} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <Tooltip
                     contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 12 }}
                     cursor={{ fill: "#F3F4F6" }}
                   />
-                  <Bar dataKey="Applications" fill="#00C897" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="Applications" fill="#00C897" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
