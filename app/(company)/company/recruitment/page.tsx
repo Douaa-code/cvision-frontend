@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, UserCheck, Clock, XCircle, Eye } from "lucide-react";
+import { Users, UserCheck, Clock, XCircle, Eye, MessageCircle } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { mockCompanyApplications } from "@/lib/mock-data/company";
 import { mockJobs } from "@/lib/mock-data/jobs";
@@ -151,9 +151,14 @@ export default function RecruitmentPage() {
                   <p className="text-xs text-muted-foreground mb-2">{app.jobTitle}</p>
                   <div className="flex items-center justify-between">
                     {app.testStatus && <StatusBadge status={app.testStatus} />}
-                    <Link href={`/company/recruitment/${app.candidateId}`}>
-                      <Button variant="ghost" size="sm"><Eye className="w-3 h-3" /></Button>
-                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Link href={`/company/recruitment/${app.candidateId}`}>
+                        <Button variant="ghost" size="sm"><Eye className="w-3 h-3" /></Button>
+                      </Link>
+                      <Link href="/company/messages">
+                        <Button variant="ghost" size="sm"><MessageCircle className="w-3 h-3" /></Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -180,8 +185,16 @@ export default function RecruitmentPage() {
                   </div>
                   <p className="text-xs text-muted-foreground mb-1">{app.jobTitle}</p>
                   {app.comments && (
-                    <p className="text-xs text-muted-foreground italic">&ldquo;{app.comments}&rdquo;</p>
+                    <p className="text-xs text-muted-foreground italic mb-2">&ldquo;{app.comments}&rdquo;</p>
                   )}
+                  <div className="flex items-center justify-end gap-1">
+                    <Link href={`/company/recruitment/${app.candidateId}`}>
+                      <Button variant="ghost" size="sm"><Eye className="w-3 h-3" /></Button>
+                    </Link>
+                    <Link href="/company/messages">
+                      <Button variant="ghost" size="sm"><MessageCircle className="w-3 h-3" /></Button>
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
