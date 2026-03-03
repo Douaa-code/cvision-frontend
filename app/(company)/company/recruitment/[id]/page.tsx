@@ -42,11 +42,12 @@ const candidateProfiles: Record<string, {
   experience: string;
   skills: string[];
   languages: { name: string; level: string }[];
+  graduationCertificate?: { name: string; url: string };
 }> = {
-  u1: { name: "John Doe", email: "john@example.dz", phone: "+213 555 111 222", wilaya: "Algiers", education: "Master's Degree - IT & Software", university: "USTHB", experience: "5-10 years", skills: ["PHP", "Laravel", "MySQL", "Docker", "React", "Git"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Fluent" }] },
-  u2: { name: "Amina Khelif", email: "amina@example.dz", phone: "+213 555 222 333", wilaya: "Oran", education: "Master's Degree - IT & Software", university: "USTO", experience: "5-10 years", skills: ["PHP", "Symfony", "PostgreSQL", "Redis", "Vue.js", "AWS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Intermediate" }] },
-  u3: { name: "Youcef Mebarki", email: "youcef@example.dz", phone: "+213 555 333 444", wilaya: "Constantine", education: "Bachelor's Degree - IT & Software", university: "Université Constantine 1", experience: "2-5 years", skills: ["PHP", "Laravel", "MySQL", "JavaScript"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }] },
-  u6: { name: "Sara Benattia", email: "sara@example.dz", phone: "+213 555 666 777", wilaya: "Algiers", education: "Master's Degree - IT & Software", university: "ESI", experience: "2-5 years", skills: ["React", "Node.js", "TypeScript", "MongoDB", "Next.js", "Tailwind CSS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Fluent" }] },
+  u1: { name: "John Doe", email: "john@example.dz", phone: "+213 555 111 222", wilaya: "Algiers", education: "Master's Degree - IT & Software", university: "USTHB", experience: "5-10 years", skills: ["PHP", "Laravel", "MySQL", "Docker", "React", "Git"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Fluent" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" } },
+  u2: { name: "Amina Khelif", email: "amina@example.dz", phone: "+213 555 222 333", wilaya: "Oran", education: "Master's Degree - IT & Software", university: "USTO", experience: "5-10 years", skills: ["PHP", "Symfony", "PostgreSQL", "Redis", "Vue.js", "AWS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Intermediate" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" } },
+  u3: { name: "Youcef Mebarki", email: "youcef@example.dz", phone: "+213 555 333 444", wilaya: "Constantine", education: "Bachelor's Degree - IT & Software", university: "Université Constantine 1", experience: "2-5 years", skills: ["PHP", "Laravel", "MySQL", "JavaScript"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" } },
+  u6: { name: "Sara Benattia", email: "sara@example.dz", phone: "+213 555 666 777", wilaya: "Algiers", education: "Master's Degree - IT & Software", university: "ESI", experience: "2-5 years", skills: ["React", "Node.js", "TypeScript", "MongoDB", "Next.js", "Tailwind CSS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Fluent" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" } },
   u7: { name: "Mohamed Cherif", email: "mohamed@example.dz", phone: "+213 555 777 888", wilaya: "Blida", education: "Bachelor's Degree - IT & Software", university: "Université Blida 1", experience: "2-5 years", skills: ["React", "Node.js", "PostgreSQL", "Docker", "AWS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }] },
 };
 
@@ -168,13 +169,31 @@ export default function RecruitmentDetailPage({
 
               <div>
                 <p className="text-sm font-medium mb-2">Graduation Certificate</p>
-                <div className="flex items-center gap-3 p-3 bg-cvision-container rounded-lg border border-border">
-                  <FileText className="w-4 h-4 text-cvision-green flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">graduation_certificate.pdf</p>
-                    <p className="text-xs text-muted-foreground">Uploaded by candidate</p>
+                {profile.graduationCertificate ? (
+                  <div className="flex items-center justify-between gap-3 p-3 bg-cvision-container rounded-lg border border-border">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <FileText className="w-4 h-4 text-cvision-green shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{profile.graduationCertificate.name}</p>
+                        <p className="text-xs text-muted-foreground">Uploaded by candidate</p>
+                      </div>
+                    </div>
+                    <a
+                      href={profile.graduationCertificate.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="outline" size="sm" className="shrink-0">
+                        View Certificate
+                      </Button>
+                    </a>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 bg-cvision-container rounded-lg border border-border">
+                    <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <p className="text-sm text-muted-foreground">No certificate uploaded.</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
