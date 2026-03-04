@@ -133,23 +133,6 @@ export const mockCompanyApplications: Application[] = [
   },
   // Job 3 - Full Stack Developer
   {
-    id: "ca6",
-    candidateId: "u1",
-    candidateName: "John Doe",
-    jobId: "3",
-    jobTitle: "Full Stack Developer",
-    companyId: "c1",
-    companyName: "Tech Solutions Inc.",
-    appliedDate: new Date("2026-02-01"),
-    currentStatus: "Pending",
-    compatibilityScore: 92,
-    testStatus: "Passed",
-    testScore: 76,
-    testCompletedAt: new Date("2026-02-03"),
-    createdAt: new Date("2026-02-01"),
-    updatedAt: new Date("2026-02-03"),
-  },
-  {
     id: "ca7",
     candidateId: "u6",
     candidateName: "Sara Benattia",
