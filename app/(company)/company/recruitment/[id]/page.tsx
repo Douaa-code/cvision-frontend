@@ -26,6 +26,9 @@ import {
   XCircle,
   ClipboardCheck,
   FileText,
+  Calendar,
+  Building2,
+  Hash,
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { MatchScore } from "@/components/shared/MatchScore";
@@ -43,12 +46,16 @@ const candidateProfiles: Record<string, {
   skills: string[];
   languages: { name: string; level: string }[];
   graduationCertificate?: { name: string; url: string };
+  graduationYear?: string;
+  currentPosition?: string;
+  currentCompany?: string;
+  postalCode?: string;
 }> = {
-  u1: { name: "John Doe", email: "john@example.dz", phone: "+213 555 111 222", wilaya: "Algiers", education: "Master's Degree - IT & Software", university: "USTHB", experience: "5-10 years", skills: ["PHP", "Laravel", "MySQL", "Docker", "React", "Git"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Fluent" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" } },
-  u2: { name: "Amina Khelif", email: "amina@example.dz", phone: "+213 555 222 333", wilaya: "Oran", education: "Master's Degree - IT & Software", university: "USTO", experience: "5-10 years", skills: ["PHP", "Symfony", "PostgreSQL", "Redis", "Vue.js", "AWS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Intermediate" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" } },
-  u3: { name: "Youcef Mebarki", email: "youcef@example.dz", phone: "+213 555 333 444", wilaya: "Constantine", education: "Bachelor's Degree - IT & Software", university: "Université Constantine 1", experience: "2-5 years", skills: ["PHP", "Laravel", "MySQL", "JavaScript"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" } },
-  u6: { name: "Sara Benattia", email: "sara@example.dz", phone: "+213 555 666 777", wilaya: "Algiers", education: "Master's Degree - IT & Software", university: "ESI", experience: "2-5 years", skills: ["React", "Node.js", "TypeScript", "MongoDB", "Next.js", "Tailwind CSS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Fluent" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" } },
-  u7: { name: "Mohamed Cherif", email: "mohamed@example.dz", phone: "+213 555 777 888", wilaya: "Blida", education: "Bachelor's Degree - IT & Software", university: "Université Blida 1", experience: "2-5 years", skills: ["React", "Node.js", "PostgreSQL", "Docker", "AWS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }] },
+  u1: { name: "John Doe", email: "john@example.dz", phone: "+213 555 111 222", wilaya: "Algiers", education: "Master's Degree - IT & Software", university: "USTHB", experience: "5-10 years", skills: ["PHP", "Laravel", "MySQL", "Docker", "React", "Git"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Fluent" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" }, graduationYear: "2018", currentPosition: "Senior Full Stack Developer", currentCompany: "TechSoft DZ", postalCode: "16001" },
+  u2: { name: "Amina Khelif", email: "amina@example.dz", phone: "+213 555 222 333", wilaya: "Oran", education: "Master's Degree - IT & Software", university: "USTO", experience: "5-10 years", skills: ["PHP", "Symfony", "PostgreSQL", "Redis", "Vue.js", "AWS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Intermediate" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" }, graduationYear: "2017", currentPosition: "Backend Engineer", currentCompany: "InfoSys Oran", postalCode: "31000" },
+  u3: { name: "Youcef Mebarki", email: "youcef@example.dz", phone: "+213 555 333 444", wilaya: "Constantine", education: "Bachelor's Degree - IT & Software", university: "Université Constantine 1", experience: "2-5 years", skills: ["PHP", "Laravel", "MySQL", "JavaScript"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" }, graduationYear: "2021", currentPosition: "Web Developer", currentCompany: "Freelance", postalCode: "25000" },
+  u6: { name: "Sara Benattia", email: "sara@example.dz", phone: "+213 555 666 777", wilaya: "Algiers", education: "Master's Degree - IT & Software", university: "ESI", experience: "2-5 years", skills: ["React", "Node.js", "TypeScript", "MongoDB", "Next.js", "Tailwind CSS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }, { name: "English", level: "Fluent" }], graduationCertificate: { name: "graduation_certificate.pdf", url: "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF2.pdf" }, graduationYear: "2020", currentPosition: "Frontend Developer", currentCompany: "StartupDZ", postalCode: "16004" },
+  u7: { name: "Mohamed Cherif", email: "mohamed@example.dz", phone: "+213 555 777 888", wilaya: "Blida", education: "Bachelor's Degree - IT & Software", university: "Université Blida 1", experience: "2-5 years", skills: ["React", "Node.js", "PostgreSQL", "Docker", "AWS"], languages: [{ name: "Arabic", level: "Native" }, { name: "French", level: "Fluent" }], graduationYear: "2022", currentPosition: "Junior Developer", currentCompany: "DevAgency Blida", postalCode: "09000" },
 };
 
 export default function RecruitmentDetailPage({
@@ -140,6 +147,30 @@ export default function RecruitmentDetailPage({
                     <Briefcase className="w-4 h-4" /> Experience
                   </p>
                   <p className="font-medium">{profile.experience}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground flex items-center gap-1 mb-1">
+                    <Calendar className="w-4 h-4" /> Graduation Year
+                  </p>
+                  <p className="font-medium">{profile.graduationYear ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground flex items-center gap-1 mb-1">
+                    <Briefcase className="w-4 h-4" /> Current Position
+                  </p>
+                  <p className="font-medium">{profile.currentPosition ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground flex items-center gap-1 mb-1">
+                    <Building2 className="w-4 h-4" /> Current Company
+                  </p>
+                  <p className="font-medium">{profile.currentCompany ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground flex items-center gap-1 mb-1">
+                    <Hash className="w-4 h-4" /> Postal Code
+                  </p>
+                  <p className="font-medium">{profile.postalCode ?? "—"}</p>
                 </div>
               </div>
 
