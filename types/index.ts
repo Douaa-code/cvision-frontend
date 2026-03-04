@@ -179,6 +179,9 @@ export type Training = {
       completed?: boolean;
       videoUrl?: string;
       content?: string;
+      questionText?: string;
+      options?: { id: "A" | "B" | "C" | "D"; text: string }[];
+      correctAnswer?: "A" | "B" | "C" | "D";
     }[];
   }[];
   createdAt: Date;
