@@ -11,5 +11,3 @@ export default function CompanyError({
 }) {
   return <ErrorBoundaryFallback error={error} reset={reset} title="Company Portal Error" />;
 }
-
-//updat
