@@ -43,10 +43,12 @@ export function JobCard({ job, onToggleSave }: JobCardProps) {
           <MapPin className="w-4 h-4" />
           {job.wilaya}
         </span>
-        <span className="flex items-center gap-1">
-          <Banknote className="w-4 h-4" />
-          {job.salaryRange}
-        </span>
+        {job.salaryRange && (
+          <span className="flex items-center gap-1">
+            <Banknote className="w-4 h-4" />
+            {job.salaryRange}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4 text-xs text-muted-foreground">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Settings, Bell, Shield, Globe, Check } from "lucide-react";
+import { Settings, Bell, Shield, Globe, Check, Loader2 } from "lucide-react";
 import { useSettingsStore } from "@/lib/stores/settingsStore";
+import { adminApi, AdminSettings } from "@/lib/api/admin";
 
 const tabs = [
   { id: "general", label: "General", icon: Settings },
@@ -23,14 +24,18 @@ type TabId = (typeof tabs)[number]["id"];
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("general");
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
+  const { applySettings } = useSettingsStore();
 
   // General
-  const { footerText, setFooterText } = useSettingsStore();
-  const [footerTextDraft, setFooterTextDraft] = useState(footerText);
-  const [supportEmail, setSupportEmail] = useState("support@cvision.dz");
+  const [footerText, setFooterText] = useState("");
+  const [supportEmail, setSupportEmail] = useState("");
 
   // Platform
-  const [maxJobsPerCompany, setMaxJobsPerCompany] = useState("20");
+  const [maxJobsPerCompany, setMaxJobsPerCompany] = useState("10");
   const [maxApplicantsPerJob, setMaxApplicantsPerJob] = useState("100");
 
   // Notifications
@@ -43,20 +48,98 @@ export default function AdminSettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const handleSave = () => {
-    setFooterText(footerTextDraft);
+  useEffect(() => {
+    adminApi
+      .getSettings()
+      .then((s: AdminSettings) => {
+        setFooterText(s.footerText ?? "");
+        setSupportEmail(s.supportEmail ?? "");
+        setMaxJobsPerCompany(String(s.maxJobsPerCompany ?? 10));
+        setMaxApplicantsPerJob(String(s.maxApplicantsPerJob ?? 100));
+        setNotifyNewCompany(s.notifyNewCompany ?? true);
+        setNotifyNewCandidate(s.notifyNewCandidate ?? false);
+        applySettings(s.footerText ?? "", s.supportEmail ?? "");
+      })
+      .catch(console.error)
+      .finally(() => setLoadingSettings(false));
+  }, [applySettings]);
+
+  const showSaved = () => {
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => setSaved(false), 2500);
   };
 
-  const handleChangePassword = () => {
+  const handleSaveGeneral = async () => {
+    setSaving(true);
+    setSaveError("");
+    try {
+      await adminApi.updateSettings({ footerText, supportEmail });
+      applySettings(footerText, supportEmail);
+      showSaved();
+    } catch {
+      setSaveError("Failed to save settings.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSavePlatform = async () => {
+    setSaving(true);
+    setSaveError("");
+    try {
+      await adminApi.updateSettings({
+        maxJobsPerCompany: Number(maxJobsPerCompany),
+        maxApplicantsPerJob: Number(maxApplicantsPerJob),
+      });
+      showSaved();
+    } catch {
+      setSaveError("Failed to save settings.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveNotifications = async () => {
+    setSaving(true);
+    setSaveError("");
+    try {
+      await adminApi.updateSettings({ notifyNewCompany, notifyNewCandidate });
+      showSaved();
+    } catch {
+      setSaveError("Failed to save preferences.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
     setPasswordError("");
     if (!currentPassword) { setPasswordError("Current password is required."); return; }
     if (newPassword.length < 6) { setPasswordError("New password must be at least 6 characters."); return; }
     if (newPassword !== confirmPassword) { setPasswordError("Passwords do not match."); return; }
-    setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
-    handleSave();
+
+    setSaving(true);
+    try {
+      await adminApi.changePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      showSaved();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update password.";
+      setPasswordError(msg);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loadingSettings) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -94,6 +177,12 @@ export default function AdminSettingsPage() {
         </motion.div>
       )}
 
+      {saveError && (
+        <div className="mb-4 px-4 py-3 rounded-lg text-sm font-medium bg-cvision-red-bg text-cvision-red">
+          {saveError}
+        </div>
+      )}
+
       {/* General */}
       {activeTab === "general" && (
         <Card>
@@ -106,7 +195,7 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Footer Text</Label>
-                <Input value={footerTextDraft} onChange={(e) => setFooterTextDraft(e.target.value)} />
+                <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Support Email</Label>
@@ -114,7 +203,9 @@ export default function AdminSettingsPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button onClick={handleSaveGeneral} disabled={saving}>
+                {saving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving…</> : "Save Changes"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -132,15 +223,25 @@ export default function AdminSettingsPage() {
             <div className="space-y-4">
               <div className="max-w-xs space-y-2">
                 <Label>Max job offers per company</Label>
-                <Input value={maxJobsPerCompany} onChange={(e) => setMaxJobsPerCompany(e.target.value)} />
+                <Input
+                  type="number"
+                  value={maxJobsPerCompany}
+                  onChange={(e) => setMaxJobsPerCompany(e.target.value)}
+                />
               </div>
               <div className="max-w-xs space-y-2">
                 <Label>Max applicants per job offer</Label>
-                <Input value={maxApplicantsPerJob} onChange={(e) => setMaxApplicantsPerJob(e.target.value)} />
+                <Input
+                  type="number"
+                  value={maxApplicantsPerJob}
+                  onChange={(e) => setMaxApplicantsPerJob(e.target.value)}
+                />
               </div>
             </div>
             <div className="flex justify-end">
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button onClick={handleSavePlatform} disabled={saving}>
+                {saving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving…</> : "Save Changes"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -157,14 +258,22 @@ export default function AdminSettingsPage() {
             <Separator />
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <Checkbox id="notifCompany" checked={notifyNewCompany} onCheckedChange={(c) => setNotifyNewCompany(c === true)} />
+                <Checkbox
+                  id="notifCompany"
+                  checked={notifyNewCompany}
+                  onCheckedChange={(c) => setNotifyNewCompany(c === true)}
+                />
                 <div>
                   <Label htmlFor="notifCompany" className="cursor-pointer">New company registration</Label>
                   <p className="text-xs text-muted-foreground">Get notified when a new company registers.</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Checkbox id="notifCandidate" checked={notifyNewCandidate} onCheckedChange={(c) => setNotifyNewCandidate(c === true)} />
+                <Checkbox
+                  id="notifCandidate"
+                  checked={notifyNewCandidate}
+                  onCheckedChange={(c) => setNotifyNewCandidate(c === true)}
+                />
                 <div>
                   <Label htmlFor="notifCandidate" className="cursor-pointer">New candidate registration</Label>
                   <p className="text-xs text-muted-foreground">Get notified when a new candidate signs up.</p>
@@ -172,7 +281,9 @@ export default function AdminSettingsPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button onClick={handleSave}>Save Preferences</Button>
+              <Button onClick={handleSaveNotifications} disabled={saving}>
+                {saving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving…</> : "Save Preferences"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -190,18 +301,35 @@ export default function AdminSettingsPage() {
             <div className="max-w-md space-y-4">
               <div className="space-y-2">
                 <Label>Current Password</Label>
-                <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password" />
+                <Input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                />
               </div>
               <div className="space-y-2">
                 <Label>New Password</Label>
-                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" />
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Confirm New Password</Label>
-                <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" />
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                />
               </div>
               {passwordError && <p className="text-sm text-cvision-red">{passwordError}</p>}
-              <Button onClick={handleChangePassword}>Update Password</Button>
+              <Button onClick={handleChangePassword} disabled={saving}>
+                {saving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Updating…</> : "Update Password"}
+              </Button>
             </div>
           </CardContent>
         </Card>

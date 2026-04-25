@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,26 +22,38 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Search, MapPin } from "lucide-react";
-import { mockAdminCandidates } from "@/lib/mock-data/admin";
+import { adminApi, AdminCandidate } from "@/lib/api/admin";
 
 export default function CandidatesListPage() {
+  const [candidates, setCandidates] = useState<AdminCandidate[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterWilaya, setFilterWilaya] = useState("all");
   const [filterDomain, setFilterDomain] = useState("all");
   const [filterEducation, setFilterEducation] = useState("all");
 
-  const wilayas = [...new Set(mockAdminCandidates.map((c) => c.wilaya))];
-  const domains = [...new Set(mockAdminCandidates.map((c) => c.fieldOfStudy))];
-  const educationLevels = [...new Set(mockAdminCandidates.map((c) => c.educationLevel))];
+  useEffect(() => {
+    adminApi
+      .getCandidates()
+      .then(setCandidates)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
-  const filtered = mockAdminCandidates.filter((c) => {
-    const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
-    if (search && !fullName.includes(search.toLowerCase()) && !c.email.toLowerCase().includes(search.toLowerCase())) return false;
-    if (filterWilaya !== "all" && c.wilaya !== filterWilaya) return false;
-    if (filterDomain !== "all" && c.fieldOfStudy !== filterDomain) return false;
-    if (filterEducation !== "all" && c.educationLevel !== filterEducation) return false;
-    return true;
-  });
+  const wilayas = useMemo(() => [...new Set(candidates.map((c) => c.wilaya).filter(Boolean))], [candidates]);
+  const domains = useMemo(() => [...new Set(candidates.map((c) => c.fieldOfStudy).filter(Boolean))], [candidates]);
+  const educationLevels = useMemo(() => [...new Set(candidates.map((c) => c.educationLevel).filter(Boolean))], [candidates]);
+
+  const filtered = useMemo(() =>
+    candidates.filter((c) => {
+      const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
+      if (search && !fullName.includes(search.toLowerCase()) && !c.email.toLowerCase().includes(search.toLowerCase())) return false;
+      if (filterWilaya !== "all" && c.wilaya !== filterWilaya) return false;
+      if (filterDomain !== "all" && c.fieldOfStudy !== filterDomain) return false;
+      if (filterEducation !== "all" && c.educationLevel !== filterEducation) return false;
+      return true;
+    }),
+  [candidates, search, filterWilaya, filterDomain, filterEducation]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -110,62 +122,77 @@ export default function CandidatesListPage() {
       {/* Table */}
       <Card>
         <CardContent className="p-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Education</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Skills</TableHead>
-                  <TableHead>Registered</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground">
-                          {c.firstName.charAt(0)}
-                        </div>
-                        <span className="font-medium">{c.firstName} {c.lastName}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{c.email}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="text-sm flex items-center gap-1"><MapPin className="w-3 h-3" />{c.wilaya}</p>
-                        {c.postalCode && <p className="text-xs text-muted-foreground">{c.postalCode}</p>}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="text-sm">{c.educationLevel}</p>
-                        <p className="text-xs text-muted-foreground">{c.fieldOfStudy}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{c.yearsOfExperience}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
-                        {c.skills.slice(0, 3).map((skill) => (
-                          <Badge key={skill} variant="secondary" className="text-xs">{skill}</Badge>
-                        ))}
-                        {c.skills.length > 3 && (
-                          <Badge variant="outline" className="text-xs">+{c.skills.length - 3}</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.createdAt.toLocaleDateString()}
-                    </TableCell>
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Education</TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Skills</TableHead>
+                    <TableHead>Registered</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {c.profilePhotoUrl ? (
+                            <img src={c.profilePhotoUrl} alt={c.firstName} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
+                              {c.firstName.charAt(0)}
+                            </div>
+                          )}
+                          <span className="font-medium">{c.firstName} {c.lastName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{c.email}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-sm flex items-center gap-1"><MapPin className="w-3 h-3" />{c.wilaya}</p>
+                          {c.postalCode && <p className="text-xs text-muted-foreground">{c.postalCode}</p>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-sm">{c.educationLevel}</p>
+                          <p className="text-xs text-muted-foreground">{c.fieldOfStudy}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{c.yearsOfExperience}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {c.skills.slice(0, 3).map((skill) => (
+                            <Badge key={skill} variant="secondary" className="text-xs">{skill}</Badge>
+                          ))}
+                          {c.skills.length > 3 && (
+                            <Badge variant="outline" className="text-xs">+{c.skills.length - 3}</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(c.createdAt).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        No candidates found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>

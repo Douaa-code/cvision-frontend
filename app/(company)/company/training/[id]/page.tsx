@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -25,27 +25,98 @@ import {
   HelpCircle,
   Trash2,
   Tag,
-  CheckCircle2,
-  Circle,
+  Users,
+  Image,
+  Paperclip,
 } from "lucide-react";
-import { mockTrainings } from "@/lib/mock-data/training";
-import { mockJobs } from "@/lib/mock-data/jobs";
+import { trainingsApi, type ApiCompanyTrainingDetail, type ApiTrainingModule } from "@/lib/api/trainings";
 
-const lessonIcons = {
+const moduleIcons: Record<string, React.ElementType> = {
   video: PlayCircle,
   text: FileText,
-  quiz: HelpCircle,
+  mcq_quiz: HelpCircle,
+  image: Image,
+  file: Paperclip,
 };
 
-const lessonLabels = {
+const moduleLabels: Record<string, string> = {
   video: "Video",
   text: "Reading",
-  quiz: "Quiz",
+  mcq_quiz: "Quiz",
+  image: "Image",
+  file: "File",
 };
 
-function getJobTitle(jobOfferId?: string): string {
-  if (!jobOfferId) return "—";
-  return mockJobs.find((j) => j.id === jobOfferId)?.jobTitle ?? "—";
+function ModuleCard({ module }: { module: ApiTrainingModule }) {
+  const Icon = moduleIcons[module.type] ?? FileText;
+  const label = moduleLabels[module.type] ?? module.type;
+  const content = module.content as Record<string, unknown> | null;
+
+  return (
+    <div className="rounded-lg border border-border bg-cvision-container overflow-hidden">
+      <div className="flex items-center gap-3 px-3 py-2.5 border-b border-border">
+        <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+        <span className="flex-1 text-sm font-medium">{module.title}</span>
+        <span className="text-xs text-muted-foreground shrink-0 bg-cvision-bar px-2 py-0.5 rounded">
+          {label}
+        </span>
+        {module.duration > 0 && (
+          <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {module.duration} min
+          </span>
+        )}
+      </div>
+
+      {/* Video URL */}
+      {module.type === "video" && content?.url && (
+        <div className="p-3">
+          <a
+            href={content.url as string}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-cvision-green hover:underline font-medium"
+          >
+            <PlayCircle className="w-4 h-4" />
+            Watch Video
+          </a>
+        </div>
+      )}
+
+      {/* Text content */}
+      {module.type === "text" && content?.body && (
+        <div className="p-3">
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+            {content.body as string}
+          </p>
+        </div>
+      )}
+
+      {/* Quiz questions count */}
+      {module.type === "mcq_quiz" && content?.questions && (
+        <div className="p-3">
+          <p className="text-xs text-muted-foreground">
+            {(content.questions as unknown[]).length} question(s) · Passing score: {(content.passing_score as number) ?? 70}%
+          </p>
+        </div>
+      )}
+
+      {/* File link */}
+      {(module.type === "file" || module.type === "image") && content?.url && (
+        <div className="p-3">
+          <a
+            href={content.url as string}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-cvision-green hover:underline font-medium"
+          >
+            <Paperclip className="w-4 h-4" />
+            {content.name as string ?? "View File"}
+          </a>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function TrainingDetailPage({
@@ -55,8 +126,38 @@ export default function TrainingDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const training = mockTrainings.find((t) => t.id === id);
+  const [training, setTraining] = useState<ApiCompanyTrainingDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    trainingsApi
+      .companyShow(id)
+      .then((res) => setTraining(res.data))
+      .catch(() => setTraining(null))
+      .finally(() => setIsLoading(false));
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!training) return;
+    setDeleting(true);
+    try {
+      await trainingsApi.companyDelete(training.id);
+      router.push("/company/training");
+    } catch {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cvision-green" />
+      </div>
+    );
+  }
 
   if (!training) {
     return (
@@ -69,15 +170,10 @@ export default function TrainingDetailPage({
     );
   }
 
-  const totalLessons = training.modules.reduce(
-    (acc, m) => acc + m.lessons.length,
-    0
-  );
-
-  const handleRemove = () => {
-    setShowDeleteDialog(false);
-    router.push("/company/training");
-  };
+  const totalMinutes = training.total_duration;
+  const totalHours = totalMinutes >= 60
+    ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60 > 0 ? `${totalMinutes % 60}m` : ""}`.trim()
+    : `${totalMinutes}m`;
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -101,21 +197,29 @@ export default function TrainingDetailPage({
                 </p>
               )}
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <Briefcase className="w-4 h-4" />
-                  {getJobTitle(training.jobOfferId)}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Tag className="w-4 h-4" />
-                  {training.domain}
-                </span>
+                {training.job_offer && (
+                  <>
+                    <span className="flex items-center gap-1.5">
+                      <Briefcase className="w-4 h-4" />
+                      {training.job_offer.title}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Tag className="w-4 h-4" />
+                      {training.job_offer.domain}
+                    </span>
+                  </>
+                )}
                 <span className="flex items-center gap-1.5">
                   <BookOpen className="w-4 h-4" />
-                  {training.modules.length} modules · {totalLessons} lessons
+                  {training.modules.length} modules
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
-                  {training.totalHours}h total
+                  {totalHours} total
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Users className="w-4 h-4" />
+                  {training.enrolled_count} enrolled
                 </span>
               </div>
             </div>
@@ -132,114 +236,35 @@ export default function TrainingDetailPage({
         </CardContent>
       </Card>
 
-      {/* Content preview */}
+      {/* Modules */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="font-semibold text-lg mb-4">Content</h2>
-          <div className="space-y-4">
-            {training.modules.map((module, mi) => {
-              const moduleDuration = module.lessons.reduce((acc, l) => acc + l.duration, 0);
-              const completedCount = module.lessons.filter((l) => l.completed).length;
-              return (
-                <div key={module.moduleId}>
-                  {mi > 0 && <Separator className="mb-4" />}
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-sm">
-                      Module {mi + 1}: {module.moduleTitle}
-                    </h3>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-cvision-green" />
-                        {completedCount}/{module.lessons.length} completed
+          <h2 className="font-semibold text-lg mb-4">
+            Modules ({training.modules.length})
+          </h2>
+          {training.modules.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No modules in this training.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {training.modules
+                .sort((a, b) => a.order - b.order)
+                .map((module, i) => (
+                  <div key={module.id}>
+                    {i > 0 && <Separator className="mb-3" />}
+                    <div className="flex items-start gap-3">
+                      <span className="text-xs text-muted-foreground font-mono mt-2.5 w-5 shrink-0 text-right">
+                        {i + 1}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        {moduleDuration} min
-                      </span>
+                      <div className="flex-1">
+                        <ModuleCard module={module} />
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-3 pl-4">
-                    {module.lessons.map((lesson) => {
-                      const Icon =
-                        lessonIcons[lesson.type as keyof typeof lessonIcons] ??
-                        FileText;
-                      return (
-                        <div
-                          key={lesson.lessonId}
-                          className="rounded-lg border border-border bg-cvision-container overflow-hidden"
-                        >
-                          {/* Lesson header */}
-                          <div className="flex items-center gap-3 px-3 py-2.5 border-b border-border">
-                            {lesson.completed ? (
-                              <CheckCircle2 className="w-4 h-4 text-cvision-green shrink-0" />
-                            ) : (
-                              <Circle className="w-4 h-4 text-muted-foreground shrink-0" />
-                            )}
-                            <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                            <span className="flex-1 text-sm font-medium">
-                              {lesson.title}
-                            </span>
-                            <span className="text-xs text-muted-foreground shrink-0">
-                              {lesson.duration} min
-                            </span>
-                          </div>
-
-                          {/* Video */}
-                          {lesson.type === "video" && lesson.videoUrl && lesson.videoUrl !== "#" && (
-                            <div className="p-3">
-                              <a
-                                href={lesson.videoUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-sm text-cvision-green hover:underline font-medium"
-                              >
-                                <PlayCircle className="w-4 h-4" />
-                                Watch Video
-                              </a>
-                            </div>
-                          )}
-
-                          {/* Text */}
-                          {lesson.type === "text" && lesson.content && (
-                            <div className="p-3">
-                              <p className="text-sm text-muted-foreground leading-relaxed">
-                                {lesson.content}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Quiz */}
-                          {lesson.type === "quiz" && lesson.questionText && (
-                            <div className="p-3 space-y-3">
-                              <p className="text-sm font-medium">{lesson.questionText}</p>
-                              <div className="space-y-1.5">
-                                {lesson.options?.map((opt) => (
-                                  <div
-                                    key={opt.id}
-                                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm border ${
-                                      opt.id === lesson.correctAnswer
-                                        ? "border-cvision-green bg-cvision-green/10 text-cvision-green font-medium"
-                                        : "border-border bg-background"
-                                    }`}
-                                  >
-                                    <span className="font-semibold w-5 shrink-0">{opt.id}.</span>
-                                    <span>{opt.text}</span>
-                                    {opt.id === lesson.correctAnswer && (
-                                      <CheckCircle2 className="w-3.5 h-3.5 ml-auto shrink-0" />
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -256,8 +281,8 @@ export default function TrainingDetailPage({
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleRemove}>
-              Remove Training
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Removing…" : "Remove Training"}
             </Button>
           </DialogFooter>
         </DialogContent>

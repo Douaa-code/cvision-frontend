@@ -22,6 +22,7 @@ import {
   staggerContainerVariants,
   staggerItemVariants,
 } from "@/lib/animations/variants";
+import { AdCarousel } from "@/components/sections/AdCarousel";
 
 const features = [
   {
@@ -284,6 +285,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Ad Carousel Section */}
+      <AdCarousel />
 
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-cvision-green to-emerald-600 relative overflow-hidden">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,32 +15,76 @@ import {
 } from "@/components/ui/select";
 import { Users, UserCheck, Clock, XCircle, Eye, MessageCircle } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { mockCompanyApplications } from "@/lib/mock-data/company";
-import { mockJobs } from "@/lib/mock-data/jobs";
+import { jobsApi, type ApiJob } from "@/lib/api/jobs";
+import {
+  applicationsApi,
+  type ApiApplicationFull,
+} from "@/lib/api/applications";
+import { adaptJob } from "@/lib/api/adapters";
+import type { JobOffer } from "@/types";
 import {
   staggerContainerVariants,
   staggerItemVariants,
 } from "@/lib/animations/variants";
 
-const companyJobs = mockJobs.filter((j) => j.companyId === "c1");
-
 export default function RecruitmentPage() {
-  const [filterJob, setFilterJob] = useState("all");
+  const [jobs, setJobs]               = useState<JobOffer[]>([]);
+  const [rawJobs, setRawJobs]         = useState<ApiJob[]>([]);
+  const [applications, setApplications] = useState<ApiApplicationFull[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [filterJob, setFilterJob]     = useState("all");
 
-  const apps = filterJob === "all"
-    ? mockCompanyApplications
-    : mockCompanyApplications.filter((a) => a.jobId === filterJob);
+  useEffect(() => {
+    async function load() {
+      try {
+        const jobRes = await jobsApi.companyList();
+        const apiJobs = jobRes?.data?.data ?? [];
+        setRawJobs(apiJobs);
+        setJobs(apiJobs.map(adaptJob));
 
-  const pending = apps.filter((a) => a.currentStatus === "Pending");
-  const accepted = apps.filter((a) => a.currentStatus === "Accepted");
-  const rejected = apps.filter((a) => a.currentStatus === "Rejected");
+        // Fetch applications for all jobs in parallel
+        const results = await Promise.all(
+          apiJobs.map((j) =>
+            applicationsApi
+              .jobApplications(j.id)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .then((r: any) => (r?.data?.data ?? []) as ApiApplicationFull[])
+              .catch(() => [] as ApiApplicationFull[])
+          )
+        );
+        setApplications(results.flat());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  const filtered =
+    filterJob === "all"
+      ? applications
+      : applications.filter((a) => String(a.job_offer?.id) === filterJob);
+
+  const pending  = filtered.filter((a) => a.status === "pending");
+  const accepted = filtered.filter((a) => a.status === "accepted");
+  const rejected = filtered.filter((a) => a.status === "rejected");
 
   const pipelineStages = [
-    { label: "Total Applicants", count: apps.length, icon: Users, color: "text-cvision-blue" },
-    { label: "Pending Review", count: pending.length, icon: Clock, color: "text-cvision-yellow" },
-    { label: "Accepted", count: accepted.length, icon: UserCheck, color: "text-cvision-green" },
-    { label: "Rejected", count: rejected.length, icon: XCircle, color: "text-cvision-red" },
+    { label: "Total Applicants", count: filtered.length,  icon: Users,      color: "text-cvision-blue"   },
+    { label: "Pending Review",   count: pending.length,   icon: Clock,      color: "text-cvision-yellow" },
+    { label: "Accepted",         count: accepted.length,  icon: UserCheck,  color: "text-cvision-green"  },
+    { label: "Rejected",         count: rejected.length,  icon: XCircle,    color: "text-cvision-red"    },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cvision-green" />
+      </div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -53,8 +97,8 @@ export default function RecruitmentPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Positions</SelectItem>
-              {companyJobs.map((job) => (
-                <SelectItem key={job.id} value={job.id}>{job.jobTitle}</SelectItem>
+              {rawJobs.map((j) => (
+                <SelectItem key={j.id} value={String(j.id)}>{j.title}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -99,34 +143,37 @@ export default function RecruitmentPage() {
       </motion.div>
 
       {/* Job-level Progress */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <h2 className="font-semibold text-lg mb-4">Hiring Progress by Position</h2>
-          <div className="space-y-4">
-            {companyJobs.map((job) => {
-              const jobApps = mockCompanyApplications.filter((a) => a.jobId === job.id);
-              const jobAccepted = jobApps.filter((a) => a.currentStatus === "Accepted").length;
-              const fillPercent = Math.round((jobAccepted / job.maxAcceptedCandidates) * 100);
-              return (
-                <div key={job.id} className="p-4 bg-cvision-container rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p className="font-medium text-sm">{job.jobTitle}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {jobApps.length} applicants &middot; {jobAccepted}/{job.maxAcceptedCandidates} positions filled
-                      </p>
+      {jobs.length > 0 && (
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <h2 className="font-semibold text-lg mb-4">Hiring Progress by Position</h2>
+            <div className="space-y-4">
+              {jobs.map((job) => {
+                const jobApps   = applications.filter((a) => String(a.job_offer?.id) === job.id);
+                const jobAccepted = jobApps.filter((a) => a.status === "accepted").length;
+                const max       = job.maxAcceptedCandidates || 1;
+                const fillPct   = Math.min(100, Math.round((jobAccepted / max) * 100));
+                return (
+                  <div key={job.id} className="p-4 bg-cvision-container rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-medium text-sm">{job.jobTitle}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {jobApps.length} applicants &middot; {jobAccepted}/{max} positions filled
+                        </p>
+                      </div>
+                      <span className={`text-sm font-semibold ${fillPct >= 100 ? "text-cvision-green" : "text-foreground"}`}>
+                        {fillPct}%
+                      </span>
                     </div>
-                    <span className={`text-sm font-semibold ${fillPercent >= 100 ? "text-cvision-green" : "text-foreground"}`}>
-                      {fillPercent}%
-                    </span>
+                    <Progress value={fillPct} className="h-2" />
                   </div>
-                  <Progress value={fillPercent} className="h-2" />
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Candidates by Stage */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -141,23 +188,29 @@ export default function RecruitmentPage() {
               {pending.map((app) => (
                 <div key={app.id} className="p-3 bg-cvision-container rounded-lg">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium">{app.candidateName}</p>
+                    <p className="text-sm font-medium">
+                      {app.candidate?.user?.name ?? "—"}
+                    </p>
                     <span className={`text-xs font-semibold ${
-                      app.compatibilityScore >= 80 ? "text-cvision-green" : "text-cvision-yellow"
+                      app.compatibility_score >= 80 ? "text-cvision-green" : "text-cvision-yellow"
                     }`}>
-                      {app.compatibilityScore}%
+                      {app.compatibility_score}%
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">{app.jobTitle}</p>
+                  <p className="text-xs text-muted-foreground mb-2">{app.job_offer?.title ?? "—"}</p>
                   <div className="flex items-center justify-between">
-                    {app.testStatus && <StatusBadge status={app.testStatus} />}
-                    <div className="flex items-center gap-1">
-                      <Link href={`/company/recruitment/${app.candidateId}`}>
+                    {app.test_status && app.test_status !== "not_started" && (
+                      <StatusBadge status={app.test_status === "passed" ? "Passed" : "Failed"} />
+                    )}
+                    <div className="flex items-center gap-1 ml-auto">
+                      <Link href={`/company/recruitment/${app.id}`}>
                         <Button variant="ghost" size="sm"><Eye className="w-3 h-3" /></Button>
                       </Link>
-                      <Link href="/company/messages">
-                        <Button variant="ghost" size="sm"><MessageCircle className="w-3 h-3" /></Button>
-                      </Link>
+                      {app.candidate?.id && (
+                        <Link href={`/company/messages?candidateId=${app.candidate.id}&jobId=${app.job_offer?.id ?? ""}`}>
+                          <Button variant="ghost" size="sm"><MessageCircle className="w-3 h-3" /></Button>
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -180,23 +233,33 @@ export default function RecruitmentPage() {
               {accepted.map((app) => (
                 <div key={app.id} className="p-3 bg-cvision-green-bg rounded-lg">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium">{app.candidateName}</p>
-                    <span className="text-xs font-semibold text-cvision-green">{app.compatibilityScore}%</span>
+                    <p className="text-sm font-medium">{app.candidate?.user?.name ?? "—"}</p>
+                    <span className="text-xs font-semibold text-cvision-green">{app.compatibility_score}%</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-1">{app.jobTitle}</p>
-                  {app.comments && (
-                    <p className="text-xs text-muted-foreground italic mb-2">&ldquo;{app.comments}&rdquo;</p>
+                  <p className="text-xs text-muted-foreground mb-1">{app.job_offer?.title ?? "—"}</p>
+                  {app.test_status && app.test_status !== "not_started" && (
+                    <div className="mb-1">
+                      <StatusBadge status={app.test_status === "passed" ? "Passed" : "Failed"} />
+                    </div>
+                  )}
+                  {app.comment && (
+                    <p className="text-xs text-muted-foreground italic mb-1 truncate">{app.comment}</p>
                   )}
                   <div className="flex items-center justify-end gap-1">
-                    <Link href={`/company/recruitment/${app.candidateId}`}>
+                    <Link href={`/company/recruitment/${app.id}`}>
                       <Button variant="ghost" size="sm"><Eye className="w-3 h-3" /></Button>
                     </Link>
-                    <Link href="/company/messages">
-                      <Button variant="ghost" size="sm"><MessageCircle className="w-3 h-3" /></Button>
-                    </Link>
+                    {app.candidate?.id && (
+                      <Link href={`/company/messages?candidateId=${app.candidate.id}&jobId=${app.job_offer?.id ?? ""}`}>
+                        <Button variant="ghost" size="sm"><MessageCircle className="w-3 h-3" /></Button>
+                      </Link>
+                    )}
                   </div>
                 </div>
               ))}
+              {accepted.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No accepted candidates yet.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -212,15 +275,18 @@ export default function RecruitmentPage() {
               {rejected.map((app) => (
                 <div key={app.id} className="p-3 bg-cvision-red-bg rounded-lg">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium">{app.candidateName}</p>
-                    <span className="text-xs font-semibold text-cvision-red">{app.compatibilityScore}%</span>
+                    <p className="text-sm font-medium">{app.candidate?.user?.name ?? "—"}</p>
+                    <span className="text-xs font-semibold text-cvision-red">{app.compatibility_score}%</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-1">{app.jobTitle}</p>
-                  {app.comments && (
-                    <p className="text-xs text-muted-foreground italic">&ldquo;{app.comments}&rdquo;</p>
+                  <p className="text-xs text-muted-foreground mb-1">{app.job_offer?.title ?? "—"}</p>
+                  {app.comment && (
+                    <p className="text-xs text-muted-foreground italic truncate">{app.comment}</p>
                   )}
                 </div>
               ))}
+              {rejected.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No rejected candidates.</p>
+              )}
             </div>
           </CardContent>
         </Card>

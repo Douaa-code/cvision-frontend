@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,30 +18,53 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Building2,
   Mail,
-  Globe,
   MapPin,
   FileText,
   Check,
   ShieldAlert,
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { mockCompany } from "@/lib/mock-data/company";
+import { companyApi, type ApiCompanyProfile } from "@/lib/api/company";
 import { getWilayaOptions, getPostalCodeByWilaya } from "@/lib/constants/wilayas";
 import { DOMAINS } from "@/lib/constants/domains";
 
 export default function CompanyProfilePage() {
+  const [profile, setProfile] = useState<ApiCompanyProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [companyName, setCompanyName] = useState(mockCompany.companyName);
-  const [domain, setDomain] = useState<string>(mockCompany.activityDomain);
-  const [email, setEmail] = useState(mockCompany.professionalEmail);
-  const [phone, setPhone] = useState(mockCompany.phoneNumber);
-  const [website, setWebsite] = useState(mockCompany.website ?? "");
-  const [wilaya, setWilaya] = useState<string>(mockCompany.wilaya);
-  const [postalCode, setPostalCode] = useState(mockCompany.postalCode);
+  // Editable fields
+  const [companyName, setCompanyName] = useState("");
+  const [domain, setDomain] = useState("");
+  const [phone, setPhone] = useState("");
+  const [wilaya, setWilaya] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [streetAddress, setStreetAddress] = useState("");
-  const [description, setDescription] = useState(mockCompany.description);
+  const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    companyApi.getProfile()
+      .then((r) => {
+        const p = r.data;
+        setProfile(p);
+        resetForm(p);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  function resetForm(p: ApiCompanyProfile) {
+    setCompanyName(p.company_name ?? "");
+    setDomain(p.domain ?? "");
+    setPhone(p.phone ?? "");
+    setWilaya(p.wilaya ?? "");
+    setPostalCode(p.postal_code ?? "");
+    setStreetAddress(p.street_address ?? "");
+    setDescription(p.description ?? "");
+  }
 
   const handleWilayaChange = (value: string) => {
     setWilaya(value);
@@ -49,24 +72,47 @@ export default function CompanyProfilePage() {
     if (pc) setPostalCode(pc);
   };
 
-  const handleSave = () => {
-    setEditing(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const r = await companyApi.updateProfile({
+        company_name:   companyName,
+        domain,
+        phone,
+        wilaya,
+        postal_code:    postalCode,
+        street_address: streetAddress,
+        description,
+      });
+      setProfile(r.data);
+      setEditing(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save profile.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
+    if (profile) resetForm(profile);
     setEditing(false);
-    setCompanyName(mockCompany.companyName);
-    setDomain(mockCompany.activityDomain);
-    setEmail(mockCompany.professionalEmail);
-    setPhone(mockCompany.phoneNumber);
-    setWebsite(mockCompany.website ?? "");
-    setWilaya(mockCompany.wilaya);
-    setPostalCode(mockCompany.postalCode);
-    setStreetAddress("");
-    setDescription(mockCompany.description);
+    setError(null);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cvision-green" />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return <p className="text-muted-foreground p-6">Failed to load profile.</p>;
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -88,34 +134,34 @@ export default function CompanyProfilePage() {
         </motion.div>
       )}
 
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
       {/* Company Header */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-xl bg-cvision-bar flex items-center justify-center text-xl font-bold text-muted-foreground">
-              {companyName.charAt(0)}
+              {companyName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-1">
                 <h2 className="text-xl font-bold">{companyName}</h2>
-                <StatusBadge status={mockCompany.status} />
+                <StatusBadge status={profile.status === "approved" ? "Active" : profile.status === "pending" ? "Pending" : "Rejected"} />
               </div>
               <p className="text-sm text-muted-foreground mb-2">{domain}</p>
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
-                  {wilaya} - {postalCode}
+                  {wilaya}{postalCode ? ` - ${postalCode}` : ""}
                 </span>
                 <span className="flex items-center gap-1">
                   <Mail className="w-4 h-4" />
-                  {email}
+                  {profile.user.email}
                 </span>
-                {website && (
-                  <span className="flex items-center gap-1">
-                    <Globe className="w-4 h-4" />
-                    {website}
-                  </span>
-                )}
               </div>
             </div>
           </div>
@@ -139,7 +185,7 @@ export default function CompanyProfilePage() {
                   {editing ? (
                     <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
                   ) : (
-                    <p className="text-sm text-muted-foreground p-2">{companyName}</p>
+                    <p className="text-sm text-muted-foreground p-2">{companyName || "—"}</p>
                   )}
                 </div>
 
@@ -155,17 +201,13 @@ export default function CompanyProfilePage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-sm text-muted-foreground p-2">{domain}</p>
+                    <p className="text-sm text-muted-foreground p-2">{domain || "—"}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
                   <Label>Email</Label>
-                  {editing ? (
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground p-2">{email}</p>
-                  )}
+                  <p className="text-sm text-muted-foreground p-2">{profile.user.email}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -173,16 +215,7 @@ export default function CompanyProfilePage() {
                   {editing ? (
                     <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
                   ) : (
-                    <p className="text-sm text-muted-foreground p-2">{phone}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Website</Label>
-                  {editing ? (
-                    <Input value={website} onChange={(e) => setWebsite(e.target.value)} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground p-2">{website || "—"}</p>
+                    <p className="text-sm text-muted-foreground p-2">{phone || "—"}</p>
                   )}
                 </div>
 
@@ -198,16 +231,7 @@ export default function CompanyProfilePage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-sm text-muted-foreground p-2">{wilaya}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Street Address</Label>
-                  {editing ? (
-                    <Input value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} placeholder="e.g. 12 Rue Didouche Mourad" />
-                  ) : (
-                    <p className="text-sm text-muted-foreground p-2">{streetAddress || "—"}</p>
+                    <p className="text-sm text-muted-foreground p-2">{wilaya || "—"}</p>
                   )}
                 </div>
 
@@ -216,7 +240,16 @@ export default function CompanyProfilePage() {
                   {editing ? (
                     <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
                   ) : (
-                    <p className="text-sm text-muted-foreground p-2">{postalCode}</p>
+                    <p className="text-sm text-muted-foreground p-2">{postalCode || "—"}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Street Address</Label>
+                  {editing ? (
+                    <Input value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} placeholder="e.g. 12 Rue Didouche Mourad" />
+                  ) : (
+                    <p className="text-sm text-muted-foreground p-2">{streetAddress || "—"}</p>
                   )}
                 </div>
               </div>
@@ -226,14 +259,16 @@ export default function CompanyProfilePage() {
                 {editing ? (
                   <Textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
                 ) : (
-                  <p className="text-sm text-muted-foreground p-2 leading-relaxed">{description}</p>
+                  <p className="text-sm text-muted-foreground p-2 leading-relaxed">{description || "—"}</p>
                 )}
               </div>
 
               {editing && (
                 <div className="flex gap-3 mt-6">
-                  <Button onClick={handleSave}>Save Changes</Button>
-                  <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                  <Button onClick={handleSave} disabled={saving}>
+                    {saving ? "Saving…" : "Save Changes"}
+                  </Button>
+                  <Button variant="outline" onClick={handleCancel} disabled={saving}>Cancel</Button>
                 </div>
               )}
             </CardContent>
@@ -249,27 +284,26 @@ export default function CompanyProfilePage() {
               <Separator className="mb-4" />
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 bg-cvision-container rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-cvision-blue" />
-                    <div>
-                      <p className="text-sm font-medium">Commercial Register (RC)</p>
-                      <p className="text-xs text-muted-foreground">{mockCompany.documents.commercialRegister.filename}</p>
+                {(profile.documents ?? []).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No documents uploaded.</p>
+                ) : (
+                  (profile.documents ?? []).map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between p-4 bg-cvision-container rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-5 h-5 text-cvision-blue" />
+                        <div>
+                          <p className="text-sm font-medium">{doc.document_type}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {doc.file_path.split("/").pop()}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-cvision-green font-medium bg-cvision-green-bg px-2 py-1 rounded">
+                        Uploaded
+                      </span>
                     </div>
-                  </div>
-                  <span className="text-xs text-cvision-green font-medium bg-cvision-green-bg px-2 py-1 rounded">Verified</span>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-cvision-container rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-cvision-blue" />
-                    <div>
-                      <p className="text-sm font-medium">NIF Document</p>
-                      <p className="text-xs text-muted-foreground">{mockCompany.documents.nifDocument.filename}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-cvision-green font-medium bg-cvision-green-bg px-2 py-1 rounded">Verified</span>
-                </div>
+                  ))
+                )}
 
                 <div className="flex items-start gap-3 mt-4 p-4 bg-[#FDEDEB] border border-cvision-red/20 rounded-lg">
                   <ShieldAlert className="w-5 h-5 text-cvision-red flex-shrink-0 mt-0.5" />
@@ -290,11 +324,11 @@ export default function CompanyProfilePage() {
               <div className="space-y-3 text-sm">
                 <div>
                   <p className="text-muted-foreground">Name</p>
-                  <p className="font-medium">{mockCompany.adminFullName}</p>
+                  <p className="font-medium">{profile.user.name}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Email</p>
-                  <p className="font-medium">{mockCompany.adminEmail}</p>
+                  <p className="font-medium">{profile.user.email}</p>
                 </div>
               </div>
             </CardContent>
@@ -306,22 +340,24 @@ export default function CompanyProfilePage() {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Job Offers</span>
-                  <span className="font-semibold">{mockCompany.jobOffersCount}</span>
+                  <span className="font-semibold">{profile.jobs_count}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Applications</span>
-                  <span className="font-semibold">{mockCompany.totalApplications}</span>
+                  <span className="font-semibold">{profile.total_applications}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Accepted</span>
-                  <span className="font-semibold text-cvision-green">{mockCompany.acceptedCandidates}</span>
+                  <span className="font-semibold text-cvision-green">{profile.accepted_candidates}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Registered</span>
-                  <span className="font-semibold">{mockCompany.registrationDate.toLocaleDateString()}</span>
+                  <span className="font-semibold">
+                    {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : "—"}
+                  </span>
                 </div>
               </div>
             </CardContent>

@@ -17,56 +17,100 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Clock, ChevronLeft, ChevronRight, CheckCircle2, XCircle } from "lucide-react";
-import { mockTests } from "@/lib/mock-data/tests";
+import { apiClient } from "@/lib/api/client";
+
+interface TestQuestion {
+  id: number;
+  question_text: string;
+  options: { id: "A" | "B" | "C" | "D"; text: string }[];
+}
+
+interface TestData {
+  test: {
+    id: number;
+    title: string;
+    description: string;
+    duration: number;      // minutes
+    passing_score: number; // percentage
+  };
+  questions: TestQuestion[];
+}
+
+interface SubmitResult {
+  score: number;
+  passed: boolean;
+  test_status: string;
+}
 
 export default function TestInterfacePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id } = use(params); // this is the application_id
   const router = useRouter();
-  const test = mockTests.find((t) => t.id === id) ?? mockTests[0];
 
+  const [testData, setTestData]       = useState<TestData | null>(null);
+  const [isLoading, setIsLoading]     = useState(true);
+  const [loadError, setLoadError]     = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [timeLeft, setTimeLeft] = useState(test.duration * 60);
-  const [submitted, setSubmitted] = useState(false);
+  const [answers, setAnswers]         = useState<Record<number, string>>({});
+  const [timeLeft, setTimeLeft]       = useState(0);
+  const [submitted, setSubmitted]     = useState(false);
+  const [submitting, setSubmitting]   = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [score, setScore] = useState(0);
+  const [result, setResult]           = useState<SubmitResult | null>(null);
 
-  const question = test.questions[currentQuestion];
-  const totalQuestions = test.questions.length;
-  const answeredCount = Object.keys(answers).length;
-
-  const calculateScore = useCallback(() => {
-    let correct = 0;
-    test.questions.forEach((q) => {
-      const answer = answers[q.id];
-      const correctOption = q.options.find((o) => o.isCorrect);
-      if (answer && correctOption && answer === correctOption.id) {
-        correct++;
-      }
-    });
-    return Math.round((correct / totalQuestions) * 100);
-  }, [answers, test.questions, totalQuestions]);
-
-  const handleSubmit = useCallback(() => {
-    const s = calculateScore();
-    setScore(s);
-    setSubmitted(true);
-    setShowConfirmDialog(false);
-  }, [calculateScore]);
-
-  // Timer
+  // Load test data and immediately start the attempt
   useEffect(() => {
-    if (submitted || timeLeft <= 0) {
-      if (timeLeft <= 0 && !submitted) handleSubmit();
+    (async () => {
+      try {
+        // 1. Fetch test questions
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const res = await apiClient.get<any>(`/candidate/tests/${id}`);
+        const data: TestData = res?.data ?? res;
+        setTestData(data);
+        setTimeLeft(data.test.duration * 60);
+
+        // 2. Record that the attempt has started (removes from pending list)
+        await apiClient.post(`/candidate/tests/${id}/start`, {});
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to load test.";
+        setLoadError(msg);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [id]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!testData || submitting) return;
+    setSubmitting(true);
+    setShowConfirmDialog(false);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res = await apiClient.post<any>(`/candidate/tests/${id}/submit`, { answers });
+      const data: SubmitResult = res?.data ?? res;
+      setResult(data);
+      setSubmitted(true);
+    } catch {
+      // If submit fails, still show a generic result screen
+      setResult({ score: 0, passed: false, test_status: "failed" });
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [testData, submitting, id, answers]);
+
+  // Timer countdown — auto-submit when time runs out
+  useEffect(() => {
+    if (!testData || submitted || timeLeft <= 0) {
+      if (testData && timeLeft <= 0 && !submitted) handleSubmit();
       return;
     }
     const timer = setInterval(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, submitted, handleSubmit]);
+  }, [timeLeft, submitted, handleSubmit, testData]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -74,10 +118,38 @@ export default function TestInterfacePage({
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const passed = score >= test.passingScore;
+  // ── Loading / error states ────────────────────────────────────────────────
 
-  // Results screen
-  if (submitted) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cvision-green" />
+      </div>
+    );
+  }
+
+  if (loadError || !testData) {
+    return (
+      <div className="max-w-lg mx-auto text-center py-16">
+        <p className="text-muted-foreground mb-4">
+          {loadError ?? "Test not available. It may have already been started or completed."}
+        </p>
+        <Button variant="outline" onClick={() => router.push("/tests")}>
+          Back to Tests
+        </Button>
+      </div>
+    );
+  }
+
+  const { test, questions } = testData;
+  const totalQuestions  = questions.length;
+  const answeredCount   = Object.keys(answers).length;
+  const question        = questions[currentQuestion];
+
+  // ── Results screen ────────────────────────────────────────────────────────
+
+  if (submitted && result) {
+    const passed = result.passed;
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -101,11 +173,14 @@ export default function TestInterfacePage({
             </p>
 
             <div className="bg-cvision-container rounded-xl p-6 mb-6">
-              <p className="text-4xl font-bold" style={{ color: passed ? "#00C897" : "#E74C3C" }}>
-                {score}%
+              <p
+                className="text-4xl font-bold"
+                style={{ color: passed ? "#00C897" : "#E74C3C" }}
+              >
+                {result.score}%
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Passing score: {test.passingScore}%
+                Passing score: {test.passing_score}%
               </p>
             </div>
 
@@ -129,18 +204,26 @@ export default function TestInterfacePage({
     );
   }
 
+  // ── Test taking screen ────────────────────────────────────────────────────
+
   return (
     <div>
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl font-bold">{test.testName}</h1>
-          <p className="text-sm text-muted-foreground">{test.domain}</p>
+          <h1 className="text-xl font-bold">{test.title}</h1>
+          {test.description && (
+            <p className="text-sm text-muted-foreground">{test.description}</p>
+          )}
         </div>
         <div className="flex items-center gap-4">
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono font-semibold ${
-            timeLeft < 300 ? "bg-cvision-red-bg text-cvision-red" : "bg-cvision-container text-foreground"
-          }`}>
+          <div
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono font-semibold ${
+              timeLeft < 300
+                ? "bg-cvision-red-bg text-cvision-red"
+                : "bg-cvision-container text-foreground"
+            }`}
+          >
             <Clock className="w-4 h-4" />
             {formatTime(timeLeft)}
           </div>
@@ -151,7 +234,10 @@ export default function TestInterfacePage({
       </div>
 
       {/* Progress */}
-      <Progress value={((currentQuestion + 1) / totalQuestions) * 100} className="mb-6 h-2" />
+      <Progress
+        value={((currentQuestion + 1) / totalQuestions) * 100}
+        className="mb-6 h-2"
+      />
 
       {/* Question */}
       <motion.div
@@ -165,7 +251,7 @@ export default function TestInterfacePage({
             <p className="text-xs font-semibold text-cvision-green mb-2 uppercase">
               Question {currentQuestion + 1}
             </p>
-            <h2 className="text-lg font-semibold mb-6">{question.questionText}</h2>
+            <h2 className="text-lg font-semibold mb-6">{question.question_text}</h2>
 
             <RadioGroup
               value={answers[question.id] ?? ""}
@@ -177,7 +263,7 @@ export default function TestInterfacePage({
                 {question.options.map((option) => (
                   <Label
                     key={option.id}
-                    htmlFor={`${question.id}-${option.id}`}
+                    htmlFor={`q${question.id}-${option.id}`}
                     className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors ${
                       answers[question.id] === option.id
                         ? "border-cvision-green bg-cvision-green-bg"
@@ -186,7 +272,7 @@ export default function TestInterfacePage({
                   >
                     <RadioGroupItem
                       value={option.id}
-                      id={`${question.id}-${option.id}`}
+                      id={`q${question.id}-${option.id}`}
                     />
                     <span className="font-medium text-sm mr-2">{option.id}.</span>
                     <span className="text-sm">{option.text}</span>
@@ -216,8 +302,8 @@ export default function TestInterfacePage({
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           ) : (
-            <Button onClick={() => setShowConfirmDialog(true)}>
-              Submit Test
+            <Button onClick={() => setShowConfirmDialog(true)} disabled={submitting}>
+              {submitting ? "Submitting…" : "Submit Test"}
             </Button>
           )}
         </div>
@@ -230,7 +316,8 @@ export default function TestInterfacePage({
             <DialogTitle>Submit Test?</DialogTitle>
             <DialogDescription>
               You have answered {answeredCount} out of {totalQuestions} questions.
-              {answeredCount < totalQuestions && " Unanswered questions will be marked as incorrect."}
+              {answeredCount < totalQuestions &&
+                " Unanswered questions will be marked as incorrect."}
               {" "}This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
@@ -238,7 +325,9 @@ export default function TestInterfacePage({
             <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
               Continue Test
             </Button>
-            <Button onClick={handleSubmit}>Submit</Button>
+            <Button onClick={handleSubmit} disabled={submitting}>
+              {submitting ? "Submitting…" : "Submit"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

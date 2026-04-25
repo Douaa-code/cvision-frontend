@@ -60,6 +60,7 @@ export function Sidebar({ items, title }: SidebarProps) {
             >
               <Icon className="w-5 h-5" />
               {item.label}
+              
             </Link>
           );
         })}

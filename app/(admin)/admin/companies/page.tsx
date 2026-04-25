@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,24 +23,36 @@ import {
 } from "@/components/ui/table";
 import { Search, Eye, MapPin } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { mockAdminCompanies } from "@/lib/mock-data/admin";
+import { adminApi, AdminCompany } from "@/lib/api/admin";
 
 export default function CompaniesListPage() {
+  const [companies, setCompanies] = useState<AdminCompany[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterWilaya, setFilterWilaya] = useState("all");
   const [filterDomain, setFilterDomain] = useState("all");
 
-  const wilayas = [...new Set(mockAdminCompanies.map((c) => c.wilaya))];
-  const domains = [...new Set(mockAdminCompanies.map((c) => c.activityDomain))];
+  useEffect(() => {
+    adminApi
+      .getCompanies()
+      .then(setCompanies)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
-  const filtered = mockAdminCompanies.filter((c) => {
-    if (filterStatus !== "all" && c.status !== filterStatus) return false;
-    if (filterWilaya !== "all" && c.wilaya !== filterWilaya) return false;
-    if (filterDomain !== "all" && c.activityDomain !== filterDomain) return false;
-    if (search && !c.companyName.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  const wilayas = useMemo(() => [...new Set(companies.map((c) => c.wilaya).filter(Boolean))], [companies]);
+  const domains = useMemo(() => [...new Set(companies.map((c) => c.activityDomain).filter(Boolean))], [companies]);
+
+  const filtered = useMemo(() =>
+    companies.filter((c) => {
+      if (filterStatus !== "all" && c.status !== filterStatus) return false;
+      if (filterWilaya !== "all" && c.wilaya !== filterWilaya) return false;
+      if (filterDomain !== "all" && c.activityDomain !== filterDomain) return false;
+      if (search && !c.companyName.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    }),
+  [companies, filterStatus, filterWilaya, filterDomain, search]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -114,63 +126,74 @@ export default function CompaniesListPage() {
       {/* Table */}
       <Card>
         <CardContent className="p-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Jobs</TableHead>
-                  <TableHead>Applications</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Registered</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((company) => (
-                  <TableRow key={company.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground">
-                          {company.companyName.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-medium">{company.companyName}</p>
-                          <p className="text-xs text-muted-foreground">{company.adminEmail}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{company.activityDomain}</TableCell>
-                    <TableCell>
-                      <span className="flex items-center gap-1 text-sm">
-                        <MapPin className="w-3 h-3" />{company.wilaya}
-                      </span>
-                    </TableCell>
-                    <TableCell className="font-semibold">{company.jobOffersCount}</TableCell>
-                    <TableCell className="font-semibold">{company.totalApplications}</TableCell>
-                    <TableCell><StatusBadge status={company.status} /></TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {company.registrationDate.toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Link href={`/admin/companies/${company.id}`}>
-                          <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
-                        </Link>
-                        {company.status === "Pending" && (
-                          <Link href={`/admin/companies/approval/${company.id}`}>
-                            <Button size="sm" variant="outline">Review</Button>
-                          </Link>
-                        )}
-                      </div>
-                    </TableCell>
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Domain</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Jobs</TableHead>
+                    <TableHead>Applications</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Registered</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((company) => (
+                    <TableRow key={company.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground">
+                            {company.companyName.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-medium">{company.companyName}</p>
+                            <p className="text-xs text-muted-foreground">{company.adminEmail}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{company.activityDomain}</TableCell>
+                      <TableCell>
+                        <span className="flex items-center gap-1 text-sm">
+                          <MapPin className="w-3 h-3" />{company.wilaya}
+                        </span>
+                      </TableCell>
+                      <TableCell className="font-semibold">{company.jobOffersCount}</TableCell>
+                      <TableCell className="font-semibold">{company.totalApplications}</TableCell>
+                      <TableCell><StatusBadge status={company.status} /></TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(company.registrationDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Link href={`/admin/companies/${company.id}`}>
+                            <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
+                          </Link>
+                          {company.status === "Pending" && (
+                            <Link href={`/admin/companies/approval/${company.id}`}>
+                              <Button size="sm" variant="outline">Review</Button>
+                            </Link>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        No companies found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>

@@ -24,9 +24,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Eye, EyeOff, Loader2, X, Upload, FileText } from "lucide-react";
-import { WILAYAS, getPostalCodeByWilaya } from "@/lib/constants/wilayas";
+import { WILAYAS, getWilayaCode } from "@/lib/constants/wilayas";
 import { DomainEnum, EducationEnum, ExperienceEnum } from "@/types/enums";
 import { ArrowLeft } from "lucide-react";
+import { authApi } from "@/lib/api/auth";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const candidateSchema = z
   .object({
@@ -37,7 +39,7 @@ const candidateSchema = z
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
     wilaya: z.string().min(1, "Please select a wilaya"),
-    postalCode: z.string().min(1, "Postal code is required"),
+    postalCode: z.string().min(5, "Postal code must be 5 digits"),
     streetAddress: z.string().optional(),
     educationLevel: z.string().min(1, "Please select education level"),
     fieldOfStudy: z.string().min(1, "Please select field of study"),
@@ -54,27 +56,31 @@ const candidateSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
+  })
+  .refine((data) => {
+    const wilayaEntry = WILAYAS.find((w) => w.name === data.wilaya);
+    if (!wilayaEntry) return true;
+    return data.postalCode.startsWith(wilayaEntry.code);
+  }, {
+    message: "Postal code must start with your wilaya code",
+    path: ["postalCode"],
   });
 
 type CandidateFormData = z.infer<typeof candidateSchema>;
 
 const LANGUAGE_OPTIONS = [
-  "Arabic",
-  "French",
-  "English",
-  "Tamazight",
-  "Spanish",
-  "German",
-  "Italian",
-  "Turkish",
-  "Chinese",
+  "Arabic", "French", "English", "Tamazight", "Spanish", "German",
+  "Italian", "Chinese", "Russian", "Turkish", "Japanese", "Portuguese",
+  "Dutch", "Korean", "Swedish",
 ];
 const PROFICIENCY_LEVELS = ["Native", "Fluent", "Intermediate"] as const;
 
 export default function CandidateRegisterPage() {
   const router = useRouter();
+  const { loginWithToken } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [registerError, setRegisterError] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
   const [languages, setLanguages] = useState<
@@ -83,6 +89,8 @@ export default function CandidateRegisterPage() {
   const [langName, setLangName] = useState("");
   const [langLevel, setLangLevel] = useState<(typeof PROFICIENCY_LEVELS)[number]>("Intermediate");
   const [graduationCert, setGraduationCert] = useState<File | null>(null);
+  const [postalPrefix, setPostalPrefix] = useState("");
+  const [postalSuffix, setPostalSuffix] = useState("");
 
   const {
     register,
@@ -98,13 +106,21 @@ export default function CandidateRegisterPage() {
 
   const handleWilayaChange = (value: string) => {
     setValue("wilaya", value);
-    const postal = getPostalCodeByWilaya(value);
-    if (postal) setValue("postalCode", postal);
+    const code = getWilayaCode(value) ?? "";
+    setPostalPrefix(code);
+    setPostalSuffix("000");
+    setValue("postalCode", code + "000");
+  };
+
+  const handlePostalSuffixChange = (val: string) => {
+    const digits = val.replace(/\D/g, "").slice(0, 3);
+    setPostalSuffix(digits);
+    setValue("postalCode", postalPrefix + digits);
   };
 
   const addSkill = () => {
     const trimmed = skillInput.trim();
-    if (trimmed && skills.length < 10 && !skills.includes(trimmed)) {
+    if (trimmed && skills.length < 30 && !skills.includes(trimmed)) {
       setSkills([...skills, trimmed]);
       setSkillInput("");
     }
@@ -126,10 +142,40 @@ export default function CandidateRegisterPage() {
     setLanguages(languages.filter((l) => l.name !== name));
   };
 
-  const onSubmit = async (_data: CandidateFormData) => {
+  const onSubmit = async (data: CandidateFormData) => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    router.push("/login");
+    setRegisterError("");
+
+    // Convert experience string to number
+    const experienceMap: Record<string, number> = {
+      "Entry Level": 1, "2-5 years": 3, "5-10 years": 7, "10+ years": 15,
+    };
+    const yearsExp = experienceMap[data.yearsOfExperience] ?? 0;
+
+    try {
+      const res = await authApi.registerCandidate({
+        name: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        password: data.password,
+        password_confirmation: data.confirmPassword,
+        phone: data.phoneNumber,
+        wilaya: data.wilaya,
+        postal_code: data.postalCode,
+        highest_degree: data.educationLevel,
+        field_of_study: data.fieldOfStudy,
+        years_of_experience: yearsExp,
+        skills: skills,
+      });
+      const { user, token } = res.data;
+      loginWithToken(
+        { id: user.id, name: user.name, email: user.email, role: user.role as "candidate" },
+        token
+      );
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      setRegisterError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -275,13 +321,21 @@ export default function CandidateRegisterPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="postalCode">Postal Code</Label>
-                    <Input
-                      id="postalCode"
-                      placeholder="16000"
-                      {...register("postalCode")}
-                      className={errors.postalCode ? "border-cvision-red" : ""}
-                    />
+                    <Label htmlFor="postalSuffix">Postal Code</Label>
+                    <div className={`flex rounded-md border overflow-hidden ${errors.postalCode ? "border-cvision-red" : "border-input"}`}>
+                      <span className="flex items-center px-3 bg-muted text-sm font-mono border-r border-input text-muted-foreground select-none min-w-[2.75rem] justify-center">
+                        {postalPrefix || "—"}
+                      </span>
+                      <input
+                        id="postalSuffix"
+                        value={postalSuffix}
+                        onChange={(e) => handlePostalSuffixChange(e.target.value)}
+                        maxLength={3}
+                        placeholder="000"
+                        disabled={!postalPrefix}
+                        className="flex-1 px-3 py-2 text-sm bg-transparent outline-none font-mono placeholder:text-muted-foreground disabled:opacity-50"
+                      />
+                    </div>
                     {errors.postalCode && (
                       <p className="text-xs text-cvision-red">{errors.postalCode.message}</p>
                     )}
@@ -394,7 +448,7 @@ export default function CandidateRegisterPage() {
               {/* Skills */}
               <div>
                 <h3 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">
-                  Skills <span className="text-muted-foreground font-normal normal-case">(max 10)</span>
+                  Skills <span className="text-muted-foreground font-normal normal-case">(max 30)</span>
                 </h3>
                 <div className="flex gap-2 mb-3">
                   <Input
@@ -412,7 +466,7 @@ export default function CandidateRegisterPage() {
                     type="button"
                     variant="outline"
                     onClick={addSkill}
-                    disabled={skills.length >= 10}
+                    disabled={skills.length >= 30}
                   >
                     Add
                   </Button>
@@ -508,11 +562,11 @@ export default function CandidateRegisterPage() {
                 ) : (
                   <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-cvision-green transition-colors">
                     <Upload className="w-6 h-6 text-muted-foreground mb-2" />
-                    <span className="text-sm text-muted-foreground">Click to upload (Image or PDF)</span>
+                    <span className="text-sm text-muted-foreground">Click to upload (Image or PDF or ZIP or RAR)</span>
                     <input
                       type="file"
                       className="hidden"
-                      accept=".pdf,.jpg,.jpeg,.png"
+                      accept=".pdf,.jpg,.jpeg,.png,.zip,.rar"
                       onChange={(e) => setGraduationCert(e.target.files?.[0] ?? null)}
                     />
                   </label>
@@ -520,6 +574,11 @@ export default function CandidateRegisterPage() {
               </div>
 
               {/* Submit */}
+              {registerError && (
+                <div className="bg-cvision-red-bg text-cvision-red text-sm p-3 rounded-lg">
+                  {registerError}
+                </div>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>

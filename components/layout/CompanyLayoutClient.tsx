@@ -8,7 +8,9 @@ import {
   Users,
   UserCheck,
   ClipboardCheck,
+  ListChecks,
   GraduationCap,
+  BookOpen,
   MessageCircle,
   Settings,
 } from "lucide-react";
@@ -23,9 +25,9 @@ const companySidebarItems: SidebarItem[] = [
   { label: "Applicants", href: "/company/applicants", icon: Users },
   { label: "Recruitment", href: "/company/recruitment", icon: UserCheck },
   { label: "Tests", href: "/company/tests", icon: ClipboardCheck },
-  { label: "Create Test", href: "/company/tests/create", icon: ClipboardCheck },
+  { label: "Create Test", href: "/company/tests/create", icon: ListChecks },
   { label: "Training", href: "/company/training", icon: GraduationCap },
-  { label: "Create Training", href: "/company/training/create", icon: GraduationCap },
+  { label: "Create Training", href: "/company/training/create", icon: BookOpen },
   { label: "Messages", href: "/company/messages", icon: MessageCircle },
   { label: "Settings", href: "/company/settings", icon: Settings },
 ];
@@ -46,7 +48,6 @@ export default function CompanyLayoutClient({
       sidebarItems={companySidebarItems}
       sidebarTitle="Company Portal"
       topbarLinks={topbarLinks}
-      userName="Tech Solutions Inc."
     >
       {children}
     </DashboardLayout>

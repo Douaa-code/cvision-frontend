@@ -38,7 +38,6 @@ export default function CandidateLayoutClient({
       sidebarItems={candidateSidebarItems}
       sidebarTitle="Candidate Portal"
       topbarLinks={topbarLinks}
-      userName="John Doe"
     >
       {children}
     </DashboardLayout>

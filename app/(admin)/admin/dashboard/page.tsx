@@ -1,17 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Building2,
   Clock,
@@ -20,34 +13,40 @@ import {
   ClipboardList,
   ArrowRight,
   CheckCircle2,
-  XCircle,
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import {
-  mockAdminCompanies,
-  platformStats,
-  mockAdminCandidates,
-} from "@/lib/mock-data/admin";
 import {
   staggerContainerVariants,
   staggerItemVariants,
 } from "@/lib/animations/variants";
-
-const stats = [
-  { label: "Total Companies", value: platformStats.totalCompanies.toString(), icon: Building2, color: "text-cvision-blue" },
-  { label: "Pending Approvals", value: platformStats.pendingCompanies.toString(), icon: Clock, color: "text-cvision-yellow" },
-  { label: "Total Candidates", value: platformStats.totalCandidates.toString(), icon: Users, color: "text-cvision-green" },
-  { label: "Active Job Offers", value: platformStats.activeJobOffers.toString(), icon: Briefcase, color: "text-cvision-green" },
-  { label: "Total Applications", value: platformStats.totalApplications.toString(), icon: ClipboardList, color: "text-cvision-blue" },
-  { label: "Accepted", value: platformStats.acceptedApplications.toString(), icon: CheckCircle2, color: "text-cvision-green" },
-];
-
-const pendingCompanies = mockAdminCompanies.filter((c) => c.status === "Pending");
-const recentCandidates = [...mockAdminCandidates]
-  .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-  .slice(0, 5);
+import { adminApi, AdminDashboardResponse } from "@/lib/api/admin";
 
 export default function AdminDashboard() {
+  const [dashboard, setDashboard] = useState<AdminDashboardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminApi
+      .getDashboard()
+      .then(setDashboard)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const ps = dashboard?.platformStats;
+
+  const stats = [
+    { label: "Total Companies",    value: ps?.totalCompanies ?? 0,      icon: Building2,     color: "text-cvision-green" },
+    { label: "Pending Approvals",  value: ps?.pendingCompanies ?? 0,     icon: Clock,         color: "text-cvision-green" },
+    { label: "Total Candidates",   value: ps?.totalCandidates ?? 0,      icon: Users,         color: "text-cvision-green" },
+    { label: "Active Job Offers",  value: ps?.activeJobOffers ?? 0,      icon: Briefcase,     color: "text-cvision-green" },
+    { label: "Total Applications", value: ps?.totalApplications ?? 0,    icon: ClipboardList, color: "text-cvision-green" },
+    { label: "Accepted",           value: ps?.acceptedApplications ?? 0, icon: CheckCircle2,  color: "text-cvision-green" },
+  ];
+
+  const pendingCompanies = dashboard?.pendingCompanies ?? [];
+  const recentCandidates = dashboard?.recentCandidates ?? [];
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
@@ -69,7 +68,9 @@ export default function AdminDashboard() {
                     <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stat.value}</p>
+                    <p className="text-2xl font-bold">
+                      {loading ? "—" : stat.value.toString()}
+                    </p>
                     <p className="text-sm text-muted-foreground">{stat.label}</p>
                   </div>
                 </CardContent>
@@ -96,7 +97,9 @@ export default function AdminDashboard() {
                   </Button>
                 </Link>
               </div>
-              {pendingCompanies.length === 0 ? (
+              {loading ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">Loading…</p>
+              ) : pendingCompanies.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4 text-center">
                   No pending approvals.
                 </p>
@@ -115,7 +118,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">
-                          Registered {company.registrationDate.toLocaleDateString()}
+                          Registered {new Date(company.registrationDate).toLocaleDateString()}
                         </p>
                         <Link href={`/admin/companies/approval/${company.id}`}>
                           <Button size="sm" variant="outline">Review</Button>
@@ -145,30 +148,40 @@ export default function AdminDashboard() {
                   </Button>
                 </Link>
               </div>
-              <div className="space-y-3">
-                {recentCandidates.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between p-3 bg-cvision-container rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground">
-                        {c.firstName.charAt(0)}
+              {loading ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">Loading…</p>
+              ) : recentCandidates.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No candidates yet.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {recentCandidates.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between p-3 bg-cvision-container rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground overflow-hidden">
+                          {c.profilePhotoUrl ? (
+                            <img src={c.profilePhotoUrl} alt={c.firstName} className="w-full h-full object-cover" />
+                          ) : (
+                            c.firstName.charAt(0)
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{c.firstName} {c.lastName}</p>
+                          <p className="text-xs text-muted-foreground">{c.wilaya} &middot; {c.fieldOfStudy}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">{c.firstName} {c.lastName}</p>
-                        <p className="text-xs text-muted-foreground">{c.wilaya} &middot; {c.fieldOfStudy}</p>
-                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(c.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {c.createdAt.toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
       </div>
-
-
     </div>
   );
 }

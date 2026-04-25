@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,8 @@ import {
   staggerContainerVariants,
   staggerItemVariants,
 } from "@/lib/animations/variants";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api";
 
 const keyFeatures = [
   {
@@ -79,6 +82,17 @@ const whyChoose = [
 ];
 
 export default function AboutPage() {
+  const [supportEmail, setSupportEmail] = useState("cvision.platform@gmail.com");
+
+  useEffect(() => {
+    fetch(`${API_URL}/settings`, { headers: { Accept: "application/json" } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.supportEmail) setSupportEmail(data.supportEmail);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="overflow-hidden">
       {/* Hero */}
@@ -127,7 +141,7 @@ export default function AboutPage() {
               className="grid grid-cols-2 gap-4"
             >
               {[
-                { value: "58", label: "Wilayas Covered" },
+                { value: "69", label: "Wilayas Covered" },
                 { value: "AI", label: "Powered Matching" },
                 { value: "100%", label: "Verified Companies" },
                 { value: "24/7", label: "Platform Access" },
@@ -261,7 +275,7 @@ export default function AboutPage() {
           <div className="flex flex-wrap justify-center gap-8 mb-10">
             <div className="flex items-center gap-3 text-white/90">
               <Mail className="w-5 h-5" />
-              <span>support@cvision.dz</span>
+              <span>{supportEmail}</span>
             </div>
             <div className="flex items-center gap-3 text-white/90">
               <Phone className="w-5 h-5" />

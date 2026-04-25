@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,51 +17,114 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Building2, Bell, Shield, AlertTriangle, Check } from "lucide-react";
-import { mockCompany } from "@/lib/mock-data/company";
+import { companyApi } from "@/lib/api/company";
+import { apiClient } from "@/lib/api/client";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useRouter } from "next/navigation";
 
 const tabs = [
-  { id: "general", label: "General", icon: Building2 },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "security", label: "Security", icon: Shield },
-  { id: "account", label: "Account", icon: AlertTriangle },
+  { id: "general",       label: "General",       icon: Building2    },
+  { id: "notifications", label: "Notifications", icon: Bell         },
+  { id: "security",      label: "Security",      icon: Shield       },
+  { id: "account",       label: "Account",       icon: AlertTriangle },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
 
 export default function CompanySettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("general");
-  const [saved, setSaved] = useState(false);
+  const [activeTab, setActiveTab]     = useState<TabId>("general");
+  const [saved, setSaved]             = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // General
-  const [adminName, setAdminName] = useState(mockCompany.adminFullName);
-  const [adminEmail, setAdminEmail] = useState(mockCompany.adminEmail);
+  // General — populated from real API
+  const [adminName, setAdminName]     = useState("");
+  const [adminEmail, setAdminEmail]   = useState("");
+  const [savingGeneral, setSavingGeneral] = useState(false);
 
   // Notifications
-  const [emailNewApp, setEmailNewApp] = useState(true);
+  const [emailNewApp, setEmailNewApp]             = useState(true);
   const [emailTestComplete, setEmailTestComplete] = useState(true);
+  const [savingPrefs, setSavingPrefs]             = useState(false);
 
   // Security
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [currentPassword, setCurrentPassword]   = useState("");
+  const [newPassword, setNewPassword]           = useState("");
+  const [confirmPassword, setConfirmPassword]   = useState("");
+  const [passwordError, setPasswordError]       = useState("");
+
+  const { logout } = useAuth();
+  const router = useRouter();
 
   // Account
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog]   = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting]                   = useState(false);
 
-  const handleSave = () => {
+  useEffect(() => {
+    companyApi.getProfile()
+      .then((r) => {
+        setAdminName(r.data.user.name);
+        setAdminEmail(r.data.user.email);
+      })
+      .catch(console.error)
+      .finally(() => setLoadingProfile(false));
+
+    apiClient.get<{ success: boolean; data: { email_new_app: boolean; email_test_complete: boolean } }>(
+      "/company/notification-preferences"
+    ).then((res) => {
+      setEmailNewApp(res.data.email_new_app);
+      setEmailTestComplete(res.data.email_test_complete);
+    }).catch(() => {});
+  }, []);
+
+  const showSaved = () => {
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => setSaved(false), 2500);
   };
 
-  const handleChangePassword = () => {
+  const handleSaveGeneral = async () => {
+    setSavingGeneral(true);
+    try {
+      await companyApi.updateProfile({ name: adminName, email: adminEmail });
+      showSaved();
+    } catch {
+      // silent
+    } finally {
+      setSavingGeneral(false);
+    }
+  };
+
+  const handleSaveNotifications = async () => {
+    setSavingPrefs(true);
+    try {
+      await apiClient.put("/company/notification-preferences", {
+        email_new_app: emailNewApp,
+        email_test_complete: emailTestComplete,
+      });
+      showSaved();
+    } catch {
+      // silent
+    } finally {
+      setSavingPrefs(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
     setPasswordError("");
     if (!currentPassword) { setPasswordError("Current password is required."); return; }
     if (newPassword.length < 6) { setPasswordError("New password must be at least 6 characters."); return; }
     if (newPassword !== confirmPassword) { setPasswordError("Passwords do not match."); return; }
-    setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
-    handleSave();
+    try {
+      await apiClient.put("/password", {
+        current_password:          currentPassword,
+        new_password:              newPassword,
+        new_password_confirmation: confirmPassword,
+      });
+      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+      showSaved();
+    } catch {
+      setPasswordError("Current password is incorrect or request failed.");
+    }
   };
 
   return (
@@ -109,19 +172,29 @@ export default function CompanySettingsPage() {
               <p className="text-sm text-muted-foreground">Manage your account administrator details.</p>
             </div>
             <Separator />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Administrator Name</Label>
-                <Input value={adminName} onChange={(e) => setAdminName(e.target.value)} />
+            {loadingProfile ? (
+              <div className="flex items-center justify-center h-20">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cvision-green" />
               </div>
-              <div className="space-y-2">
-                <Label>Administrator Email</Label>
-                <Input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button onClick={handleSave}>Save Changes</Button>
-            </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Administrator Name</Label>
+                    <Input value={adminName} onChange={(e) => setAdminName(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Administrator Email</Label>
+                    <Input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={handleSaveGeneral} disabled={savingGeneral}>
+                    {savingGeneral ? "Saving…" : "Save Changes"}
+                  </Button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
@@ -137,23 +210,32 @@ export default function CompanySettingsPage() {
             <Separator />
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <Checkbox id="notifNewApp" checked={emailNewApp} onCheckedChange={(c) => setEmailNewApp(c === true)} />
+                <Checkbox
+                  id="notifNewApp"
+                  checked={emailNewApp}
+                  onCheckedChange={(c) => setEmailNewApp(c === true)}
+                />
                 <div>
                   <Label htmlFor="notifNewApp" className="cursor-pointer">New Application</Label>
                   <p className="text-xs text-muted-foreground">Get notified when a candidate applies to your job offers.</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Checkbox id="notifTest" checked={emailTestComplete} onCheckedChange={(c) => setEmailTestComplete(c === true)} />
+                <Checkbox
+                  id="notifTest"
+                  checked={emailTestComplete}
+                  onCheckedChange={(c) => setEmailTestComplete(c === true)}
+                />
                 <div>
                   <Label htmlFor="notifTest" className="cursor-pointer">Test Completed</Label>
                   <p className="text-xs text-muted-foreground">Get notified when a candidate completes a test.</p>
                 </div>
               </div>
-
             </div>
             <div className="flex justify-end">
-              <Button onClick={handleSave}>Save Preferences</Button>
+              <Button onClick={handleSaveNotifications} disabled={savingPrefs}>
+                {savingPrefs ? "Saving…" : "Save Preferences"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -171,15 +253,30 @@ export default function CompanySettingsPage() {
             <div className="max-w-md space-y-4">
               <div className="space-y-2">
                 <Label>Current Password</Label>
-                <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password" />
+                <Input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                />
               </div>
               <div className="space-y-2">
                 <Label>New Password</Label>
-                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" />
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Confirm New Password</Label>
-                <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" />
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                />
               </div>
               {passwordError && <p className="text-sm text-cvision-red">{passwordError}</p>}
               <Button onClick={handleChangePassword}>Update Password</Button>
@@ -230,11 +327,30 @@ export default function CompanySettingsPage() {
             placeholder='Type "DELETE" to confirm'
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(""); }}>
+            <Button
+              variant="outline"
+              onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(""); }}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" disabled={deleteConfirmText !== "DELETE"} onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(""); }}>
-              Delete Account
+            <Button
+              variant="destructive"
+              disabled={deleteConfirmText !== "DELETE" || deleting}
+              onClick={async () => {
+                setDeleting(true);
+                try {
+                  await apiClient.delete("/user");
+                  await logout();
+                  router.push("/login");
+                } catch {
+                  setShowDeleteDialog(false);
+                  setDeleteConfirmText("");
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+            >
+              {deleting ? "Deleting…" : "Delete Account"}
             </Button>
           </DialogFooter>
         </DialogContent>

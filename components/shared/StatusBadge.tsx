@@ -15,16 +15,17 @@ const statusStyles: Record<StatusType, string> = {
 };
 
 interface StatusBadgeProps {
-  status: StatusType;
+  status: string;
   className?: string;
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const style = statusStyles[status as StatusType] ?? "bg-gray-100 text-gray-500";
   return (
     <span
       className={cn(
         "px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium inline-block whitespace-nowrap",
-        statusStyles[status],
+        style,
         className
       )}
     >

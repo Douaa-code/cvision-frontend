@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -19,10 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2, CheckCircle2, GripVertical, ClipboardList } from "lucide-react";
-import { DOMAINS } from "@/lib/constants/domains";
-import { mockJobs } from "@/lib/mock-data/jobs";
-
-const companyJobs = mockJobs.filter((j) => j.companyId === "c1");
+import { testsApi } from "@/lib/api/tests";
+import { jobsApi, type ApiJob } from "@/lib/api/jobs";
 
 type QuestionDraft = {
   id: string;
@@ -46,47 +44,68 @@ const emptyQuestion = (): QuestionDraft => ({
 export default function CreateTestPage() {
   const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [jobs, setJobs] = useState<ApiJob[]>([]);
 
-  const [jobOffer, setJobOffer] = useState("");
+  const [jobOfferId, setJobOfferId] = useState("");
   const [testName, setTestName] = useState("");
-  const [domain, setDomain] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("60");
   const [passingScore, setPassingScore] = useState("70");
   const [questions, setQuestions] = useState<QuestionDraft[]>([emptyQuestion()]);
 
-  const addQuestion = () => {
-    setQuestions((prev) => [...prev, emptyQuestion()]);
-  };
+  useEffect(() => {
+    jobsApi.companyList()
+      .then((r) => {
+        // Only show jobs that don't already have a test linked
+        const all = r?.data?.data ?? [];
+        setJobs(all.filter((j) => !j.test_id));
+      })
+      .catch(console.error);
+  }, []);
+
+  const addQuestion = () => setQuestions((prev) => [...prev, emptyQuestion()]);
 
   const removeQuestion = (id: string) => {
     if (questions.length <= 1) return;
     setQuestions((prev) => prev.filter((q) => q.id !== id));
   };
 
-  const updateQuestion = (id: string, field: string, value: string) => {
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, [field]: value } : q))
-    );
-  };
+  const updateQuestion = (id: string, field: string, value: string) =>
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, [field]: value } : q)));
 
-  const updateOption = (questionId: string, optionId: string, text: string) => {
+  const updateOption = (questionId: string, optionId: string, text: string) =>
     setQuestions((prev) =>
       prev.map((q) =>
         q.id === questionId
-          ? {
-              ...q,
-              options: q.options.map((o) =>
-                o.id === optionId ? { ...o, text } : o
-              ),
-            }
+          ? { ...q, options: q.options.map((o) => (o.id === optionId ? { ...o, text } : o)) }
           : q
       )
     );
-  };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
+  const handleSubmit = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await testsApi.companyCreate({
+        job_offer_id: Number(jobOfferId),
+        title: testName,
+        description: description || undefined,
+        duration: Number(duration),
+        passing_score: Number(passingScore),
+        questions: questions.map((q) => ({
+          question_text: q.questionText,
+          options: q.options,
+          correct_answer: q.correctAnswer,
+        })),
+      });
+      setSubmitted(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create test.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (submitted) {
@@ -103,14 +122,18 @@ export default function CreateTestPage() {
             <p className="text-muted-foreground mb-2">
               &ldquo;{testName}&rdquo; with {questions.length} question{questions.length !== 1 ? "s" : ""} has been created.
             </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              You can now link this test to a job offer.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button onClick={() => router.push("/company/jobs")}>
-                View Job Offers
-              </Button>
-              <Button variant="outline" onClick={() => { setSubmitted(false); setQuestions([emptyQuestion()]); setTestName(""); setDescription(""); }}>
+            <div className="flex gap-3 justify-center mt-6">
+              <Button onClick={() => router.push("/company/tests")}>View Tests</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSubmitted(false);
+                  setQuestions([emptyQuestion()]);
+                  setTestName("");
+                  setDescription("");
+                  setJobOfferId("");
+                }}
+              >
                 Create Another
               </Button>
             </div>
@@ -132,46 +155,40 @@ export default function CreateTestPage() {
         </Link>
       </div>
 
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
       {/* Test Info */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <h2 className="font-semibold text-lg mb-4">Test Information</h2>
           <Separator className="mb-4" />
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Job Offer</Label>
-              <Select value={jobOffer} onValueChange={setJobOffer}>
+              <Label>Job Offer *</Label>
+              <Select value={jobOfferId} onValueChange={setJobOfferId}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Choose Job Offer" /></SelectTrigger>
                 <SelectContent>
-                  {companyJobs.map((j) => (
-                    <SelectItem key={j.id} value={j.id}>{j.jobTitle}</SelectItem>
+                  {jobs.map((j) => (
+                    <SelectItem key={j.id} value={String(j.id)}>{j.title}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Domain *</Label>
-              <Select value={domain} onValueChange={setDomain}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select domain" /></SelectTrigger>
-                <SelectContent>
-                  {DOMAINS.map((d) => (
-                    <SelectItem key={d} value={d}>{d}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2 md:col-span-1">
               <Label>Test Name *</Label>
               <Input value={testName} onChange={(e) => setTestName(e.target.value)} placeholder="e.g. PHP Developer Assessment" />
             </div>
             <div className="space-y-2">
               <Label>Duration (minutes) *</Label>
-              <Input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="60" />
+              <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="60" />
             </div>
             <div className="space-y-2">
               <Label>Passing Score (%) *</Label>
-              <Input value={passingScore} onChange={(e) => setPassingScore(e.target.value)} placeholder="70" />
+              <Input type="number" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} placeholder="70" />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Description</Label>
@@ -192,16 +209,11 @@ export default function CreateTestPage() {
                   <h3 className="font-semibold">Question {qi + 1}</h3>
                 </div>
                 {questions.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeQuestion(question.id)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => removeQuestion(question.id)}>
                     <Trash2 className="w-4 h-4 text-cvision-red" />
                   </Button>
                 )}
               </div>
-
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Question Text *</Label>
@@ -212,7 +224,6 @@ export default function CreateTestPage() {
                     rows={2}
                   />
                 </div>
-
                 <div className="space-y-3">
                   <Label>Options *</Label>
                   {question.options.map((option) => (
@@ -227,7 +238,6 @@ export default function CreateTestPage() {
                     </div>
                   ))}
                 </div>
-
                 <div className="space-y-2">
                   <Label>Correct Answer *</Label>
                   <RadioGroup
@@ -262,11 +272,17 @@ export default function CreateTestPage() {
               {questions.length} question{questions.length !== 1 ? "s" : ""} &middot; {duration} min &middot; Passing: {passingScore}%
             </span>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => router.push("/company/dashboard")}>
-                Cancel
-              </Button>
-              <Button onClick={handleSubmit} disabled={!testName || !domain || questions.some((q) => !q.questionText || q.options.some((o) => !o.text))}>
-                Create Test
+              <Button variant="outline" onClick={() => router.push("/company/tests")}>Cancel</Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={
+                  saving ||
+                  !jobOfferId ||
+                  !testName ||
+                  questions.some((q) => !q.questionText || q.options.some((o) => !o.text))
+                }
+              >
+                {saving ? "Creating…" : "Create Test"}
               </Button>
             </div>
           </div>

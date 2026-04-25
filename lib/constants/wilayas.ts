@@ -57,12 +57,28 @@ export const WILAYAS = [
   { code: "56", name: "Djanet", postalCode: "56000" },
   { code: "57", name: "El Meghaier", postalCode: "57000" },
   { code: "58", name: "El Meniaa", postalCode: "58000" },
+  { code: "59", name: "Ain Bessem", postalCode: "59000" },
+  { code: "60", name: "El Eulma", postalCode: "60000" },
+  { code: "61", name: "Ain Oussera", postalCode: "61000" },
+  { code: "62", name: "Draa El Mizan", postalCode: "62000" },
+  { code: "63", name: "Bou Saada", postalCode: "63000" },
+  { code: "64", name: "Chelghoum Laid", postalCode: "64000" },
+  { code: "65", name: "El Khroub", postalCode: "65000" },
+  { code: "66", name: "Ain El Melh", postalCode: "66000" },
+  { code: "67", name: "Taher", postalCode: "67000" },
+  { code: "68", name: "El Aouinet", postalCode: "68000" },
+  { code: "69", name: "Baraki", postalCode: "69000" },
 ] as const;
 
 export type Wilaya = (typeof WILAYAS)[number];
 
 export function getPostalCodeByWilaya(wilayaName: string): string | undefined {
   return WILAYAS.find((w) => w.name === wilayaName)?.postalCode;
+}
+
+/** Returns the 2-digit code prefix for a wilaya (e.g. "13" for Tlemcen). */
+export function getWilayaCode(wilayaName: string): string | undefined {
+  return WILAYAS.find((w) => w.name === wilayaName)?.code;
 }
 
 export function getWilayaOptions() {

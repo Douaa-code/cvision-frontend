@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,25 +24,38 @@ import {
 } from "@/components/ui/table";
 import { Search, MapPin, Users, Calendar } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { mockJobs } from "@/lib/mock-data/jobs";
+import { adminApi, AdminJob, AdminJobsSummary } from "@/lib/api/admin";
 
 export default function AdminJobsPage() {
+  const [jobs, setJobs] = useState<AdminJob[]>([]);
+  const [summary, setSummary] = useState<AdminJobsSummary>({ totalJobs: 0, activeJobs: 0, totalApplications: 0 });
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterDomain, setFilterDomain] = useState("all");
-
   const [filterLocation, setFilterLocation] = useState("all");
 
-  const domains = [...new Set(mockJobs.map((j) => j.domain))];
-  const locations = [...new Set(mockJobs.map((j) => j.wilaya))];
+  useEffect(() => {
+    adminApi
+      .getJobs()
+      .then(({ data, summary: s }) => {
+        setJobs(data);
+        setSummary(s);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
-  const filtered = mockJobs.filter((j) => {
-    if (filterDomain !== "all" && j.domain !== filterDomain) return false;
-    if (filterLocation !== "all" && j.wilaya !== filterLocation) return false;
-    if (search && !j.jobTitle.toLowerCase().includes(search.toLowerCase()) && !j.companyName?.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  const domains = useMemo(() => [...new Set(jobs.map((j) => j.domain).filter(Boolean))], [jobs]);
+  const locations = useMemo(() => [...new Set(jobs.map((j) => j.wilaya).filter(Boolean))], [jobs]);
 
-  const totalApps = mockJobs.reduce((acc, j) => acc + j.applicationsCount, 0);
+  const filtered = useMemo(() =>
+    jobs.filter((j) => {
+      if (filterDomain !== "all" && j.domain !== filterDomain) return false;
+      if (filterLocation !== "all" && j.wilaya !== filterLocation) return false;
+      if (search && !j.title.toLowerCase().includes(search.toLowerCase()) && !j.companyName?.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    }),
+  [jobs, filterDomain, filterLocation, search]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -52,21 +65,19 @@ export default function AdminJobsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{mockJobs.length}</p>
+            <p className="text-2xl font-bold text-cvision-green">{loading ? "—" : summary.totalJobs}</p>
             <p className="text-sm text-muted-foreground">Total Jobs</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-cvision-green">
-              {mockJobs.filter((j) => j.status === "Active").length}
-            </p>
+            <p className="text-2xl font-bold text-cvision-green">{loading ? "—" : summary.activeJobs}</p>
             <p className="text-sm text-muted-foreground">Active</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-cvision-blue">{totalApps}</p>
+            <p className="text-2xl font-bold text-cvision-green">{loading ? "—" : summary.totalApplications}</p>
             <p className="text-sm text-muted-foreground">Total Applications</p>
           </CardContent>
         </Card>
@@ -122,59 +133,70 @@ export default function AdminJobsPage() {
       {/* Table */}
       <Card>
         <CardContent className="p-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Job Title</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Applicants</TableHead>
-                  <TableHead>Positions</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Posted</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((job) => {
-                  const fillPercent = Math.round((job.currentAccepted / job.maxAcceptedCandidates) * 100);
-                  return (
-                    <TableRow key={job.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{job.jobTitle}</p>
-                          <p className="text-xs text-muted-foreground">{job.contractType} &middot; {job.salaryRange}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">{job.companyName}</TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{job.domain}</Badge></TableCell>
-                      <TableCell>
-                        <span className="flex items-center gap-1 text-sm"><MapPin className="w-3 h-3" />{job.wilaya}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="flex items-center gap-1 text-sm font-semibold"><Users className="w-3 h-3" />{job.applicationsCount}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="w-20">
-                          <div className="flex justify-between text-xs mb-1">
-                            <span>{job.currentAccepted}/{job.maxAcceptedCandidates}</span>
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Job Title</TableHead>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Domain</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Applicants</TableHead>
+                    <TableHead>Positions</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Posted</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((job) => {
+                    const fillPercent = job.positions > 0 ? Math.round((job.positions_filled / job.positions) * 100) : 0;
+                    return (
+                      <TableRow key={job.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{job.title}</p>
+                            <p className="text-xs text-muted-foreground">{job.contractType}{job.salaryRange ? ` · ${job.salaryRange}` : ""}</p>
                           </div>
-                          <Progress value={fillPercent} className="h-1.5" />
-                        </div>
-                      </TableCell>
-                      <TableCell><StatusBadge status={job.status} /></TableCell>
-                      <TableCell>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Calendar className="w-3 h-3" />{job.postedDate.toLocaleDateString()}
-                        </span>
+                        </TableCell>
+                        <TableCell className="text-sm">{job.companyName}</TableCell>
+                        <TableCell><Badge variant="secondary" className="text-xs">{job.domain}</Badge></TableCell>
+                        <TableCell>
+                          <span className="flex items-center gap-1 text-sm"><MapPin className="w-3 h-3" />{job.wilaya}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="flex items-center gap-1 text-sm font-semibold"><Users className="w-3 h-3" />{job.applicationsCount}</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="w-20">
+                            <div className="flex justify-between text-xs mb-1">
+                              <span>{job.positions_filled}/{job.positions}</span>
+                            </div>
+                            <Progress value={fillPercent} className="h-1.5" />
+                          </div>
+                        </TableCell>
+                        <TableCell><StatusBadge status={job.status} /></TableCell>
+                        <TableCell>
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="w-3 h-3" />{new Date(job.created_at).toLocaleDateString()}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        No jobs found.
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>

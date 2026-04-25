@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,25 +30,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Shield, Ban, Eye, CheckCircle } from "lucide-react";
-import { mockAdminUsers } from "@/lib/mock-data/admin";
+import { Search, Shield, ShieldUser, User, Ban, Eye } from "lucide-react";
+import { adminApi, AdminUser, AdminUsersSummary } from "@/lib/api/admin";
 
 const roleBadgeColors: Record<string, string> = {
-  admin: "bg-blue-100 text-blue-700 border-blue-200",
-  candidate: "bg-purple-100 text-purple-700 border-purple-200",
-  company: "bg-amber-100 text-amber-700 border-amber-200",
-};
-
-const lastLoginMap: Record<string, Date> = {
-  admin1: new Date("2026-03-01"),
-  u1: new Date("2026-02-28"),
-  u2: new Date("2026-02-27"),
-  u3: new Date("2026-02-25"),
-  u4: new Date("2026-02-20"),
-  "c1-admin": new Date("2026-02-26"),
-  "c2-admin": new Date("2026-02-24"),
-  "c6-admin": new Date("2026-02-15"),
-  "c8-admin": new Date("2026-01-20"),
+  admin: "bg-red-100 text-red-700 border-red-200",
+  candidate: "bg-green-100 text-green-700 border-green-200",
+  company: "bg-blue-100 text-blue-700 border-blue-200",
 };
 
 const statusColors: Record<string, string> = {
@@ -58,29 +46,55 @@ const statusColors: Record<string, string> = {
 };
 
 export default function UsersManagementPage() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [summary, setSummary] = useState<AdminUsersSummary>({ total: 0, candidates: 0, companies: 0, admins: 0 });
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("all");
-  const [users, setUsers] = useState(mockAdminUsers);
-  const [suspendDialog, setSuspendDialog] = useState<string | null>(null);
+  const [suspendDialog, setSuspendDialog] = useState<number | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const filtered = users.filter((u) => {
-    if (filterRole !== "all" && u.role !== filterRole) return false;
-    if (search && !u.name.toLowerCase().includes(search.toLowerCase()) && !u.email.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-
-  const handleToggleSuspend = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === userId
-          ? { ...u, status: u.status === "Suspended" ? ("Active" as const) : ("Suspended" as const) }
-          : u
-      )
-    );
-    setSuspendDialog(null);
+  const fetchUsers = () => {
+    setLoading(true);
+    adminApi
+      .getUsers()
+      .then(({ data, summary: s }) => {
+        setUsers(data);
+        setSummary(s);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   };
 
+  useEffect(() => { fetchUsers(); }, []);
+
+  const filtered = useMemo(() =>
+    users.filter((u) => {
+      if (filterRole !== "all" && u.role !== filterRole) return false;
+      if (search && !u.name.toLowerCase().includes(search.toLowerCase()) && !u.email.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    }),
+  [users, filterRole, search]);
+
   const suspendUser = users.find((u) => u.id === suspendDialog);
+
+  const handleToggleSuspend = async () => {
+    if (!suspendUser) return;
+    setActionLoading(true);
+    try {
+      if (suspendUser.status === "Suspended") {
+        await adminApi.reactivateUser(suspendUser.id);
+      } else {
+        await adminApi.suspendUser(suspendUser.id);
+      }
+      setSuspendDialog(null);
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -90,31 +104,25 @@ export default function UsersManagementPage() {
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{users.length}</p>
+            <p className="text-2xl font-bold">{loading ? "—" : summary.total}</p>
             <p className="text-sm text-muted-foreground">Total Users</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-cvision-green">
-              {users.filter((u) => u.role === "candidate").length}
-            </p>
+            <p className="text-2xl font-bold text-cvision-green">{loading ? "—" : summary.candidates}</p>
             <p className="text-sm text-muted-foreground">Candidates</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-cvision-yellow">
-              {users.filter((u) => u.role === "company").length}
-            </p>
+            <p className="text-2xl font-bold text-cvision-blue">{loading ? "—" : summary.companies}</p>
             <p className="text-sm text-muted-foreground">Companies</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-cvision-blue">
-              {users.filter((u) => u.role === "admin").length}
-            </p>
+            <p className="text-2xl font-bold text-cvision-red">{loading ? "—" : summary.admins}</p>
             <p className="text-sm text-muted-foreground">Admins</p>
           </CardContent>
         </Card>
@@ -159,85 +167,104 @@ export default function UsersManagementPage() {
       {/* Table */}
       <Card>
         <CardContent className="p-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Login</TableHead>
-                  <TableHead>Registered</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground">
-                          {user.name.charAt(0)}
-                        </div>
-                        <span className="font-medium">{user.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={roleBadgeColors[user.role]}>
-                        {user.role === "admin" && <Shield className="w-3 h-3 mr-1" />}
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`text-xs font-medium px-2 py-1 rounded ${statusColors[user.status]}`}>
-                        {user.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {lastLoginMap[user.id]?.toLocaleDateString() ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {user.createdAt.toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {user.role === "company" && (
-                          <Link href={`/admin/companies/${user.id.replace("-admin", "")}`}>
-                            <Button variant="ghost" size="sm" title="View profile">
-                              <Eye className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          </Link>
-                        )}
-                        {user.role === "candidate" && (
-                          <Link href="/admin/candidates">
-                            <Button variant="ghost" size="sm" title="View profile">
-                              <Eye className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          </Link>
-                        )}
-                        {user.role !== "admin" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSuspendDialog(user.id)}
-                            title={user.status === "Suspended" ? "Reactivate" : "Suspend"}
-                          >
-                            <Ban className={`w-4 h-4 ${user.status === "Suspended" ? "text-cvision-green" : "text-cvision-red"}`} />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last Login</TableHead>
+                    <TableHead>Registered</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {user.role === "admin" ? (
+                            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                              <ShieldUser className="w-4 h-4 text-red-600" />
+                            </div>
+                          ) : user.profilePhotoUrl ? (
+                            <img src={user.profilePhotoUrl} alt={user.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
+                              {user.name.charAt(0)}
+                            </div>
+                          )}
+                          <span className="font-medium">{user.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={roleBadgeColors[user.role]}>
+                          {user.role === "admin" && <Shield className="w-3 h-3 mr-1" />}
+                          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`text-xs font-medium px-2 py-1 rounded ${statusColors[user.status] ?? ""}`}>
+                          {user.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {user.role === "company" && (
+                            <Link href={`/admin/companies`}>
+                              <Button variant="ghost" size="sm" title="View companies">
+                                <Eye className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                            </Link>
+                          )}
+                          {user.role === "candidate" && (
+                            <Link href="/admin/candidates">
+                              <Button variant="ghost" size="sm" title="View profile">
+                                <Eye className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                            </Link>
+                          )}
+                          {user.role !== "admin" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSuspendDialog(user.id)}
+                              title={user.status === "Suspended" ? "Reactivate" : "Suspend"}
+                            >
+                              <Ban className={`w-4 h-4 ${user.status === "Suspended" ? "text-cvision-green" : "text-cvision-red"}`} />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        No users found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Suspend Dialog */}
+      {/* Suspend / Reactivate Dialog */}
       <Dialog open={!!suspendDialog} onOpenChange={() => setSuspendDialog(null)}>
         <DialogContent>
           <DialogHeader>
@@ -251,12 +278,15 @@ export default function UsersManagementPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSuspendDialog(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setSuspendDialog(null)} disabled={actionLoading}>
+              Cancel
+            </Button>
             <Button
               variant={suspendUser?.status === "Suspended" ? "default" : "destructive"}
-              onClick={() => suspendDialog && handleToggleSuspend(suspendDialog)}
+              onClick={handleToggleSuspend}
+              disabled={actionLoading}
             >
-              {suspendUser?.status === "Suspended" ? "Reactivate" : "Suspend"}
+              {actionLoading ? "Processing…" : suspendUser?.status === "Suspended" ? "Reactivate" : "Suspend"}
             </Button>
           </DialogFooter>
         </DialogContent>

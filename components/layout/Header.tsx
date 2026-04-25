@@ -21,45 +21,56 @@ export function Header() {
 
 
       <div className="max-w-[1280px] mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <Image 
-            src="/logo/logo_cvision_blanc.png" 
-            alt="logo" 
-            width={120} 
+          <Link href="/" className="flex-none flex items-center gap-2">
+            <Image
+            src="/logo/logo_cvision_blanc.png"
+            alt="logo"
+            width={120}
             height={40}
             />
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link 
-            href="/" 
-            className={`text-sm font-medium transition-colors ${
+          {/* Desktop Nav – centered */}
+          <nav className="hidden md:flex flex-1 items-center justify-center gap-8">
+            <Link
+            href="/"
+            className={`text-sm font-bold transition-colors ${
               pathname=="/"
-              ? "text-black"
+              ? "text-white"
               : "text-white/80 hover:text-white"
               }`}
               >
                 Home
                 </Link>
 
-            <Link 
+            <Link
             href="/about"
-            className={`text-sm font-medium transition-colors ${
+            className={`text-sm font-bold transition-colors ${
               pathname === "/about"
-              ? "text-black"
+              ? "text-white"
               : "text-white/80 hover:text-white"
               }`}
               >
                 About Us
                 </Link>
 
+            <Link
+            href="/terms"
+            className={`text-sm font-bold transition-colors ${
+              pathname === "/terms"
+              ? "text-white"
+              : "text-white/80 hover:text-white"
+              }`}
+              >
+                Terms & Rules
+                </Link>
+
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex flex-none items-center gap-3">
             <Link href="/login">
               <Button variant="outline" size="sm">
                 Login
@@ -90,26 +101,37 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden pb-4 border-t border-border">
             <nav className="flex flex-col gap-3 pt-4">
-              <Link 
-            href="/" 
-            className={`text-sm font-medium transition-colors ${
+              <Link
+            href="/"
+            className={`text-sm font-bold transition-colors ${
               pathname=="/"
-              ? "text-black"
+              ? "text-white"
               : "text-white/80 hover:text-white"
               }`}
               >
                 Home
                 </Link>
 
-            <Link 
+            <Link
             href="/about"
-            className={`text-sm font-medium transition-colors ${
+            className={`text-sm font-bold transition-colors ${
               pathname === "/about"
-              ? "text-black"
+              ? "text-white"
               : "text-white/80 hover:text-white"
               }`}
               >
                 About Us
+                </Link>
+
+            <Link
+            href="/terms"
+            className={`text-sm font-bold transition-colors ${
+              pathname === "/terms"
+              ? "text-white"
+              : "text-white/80 hover:text-white"
+              }`}
+              >
+                Terms & Rules
                 </Link>
               <div className="flex flex-col gap-2 pt-3 border-t border-border">
                 <Link href="/login">

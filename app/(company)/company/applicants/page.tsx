@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,15 +32,20 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, XCircle, Eye, Filter } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { mockCompanyApplications } from "@/lib/mock-data/company";
-import { mockJobs } from "@/lib/mock-data/jobs";
-import type { Application } from "@/types";
+import { jobsApi } from "@/lib/api/jobs";
+import { applicationsApi } from "@/lib/api/applications";
+import { adaptJob, adaptApplication } from "@/lib/api/adapters";
+import type { ApiApplication } from "@/lib/api/adapters";
+import type { JobOffer, Application } from "@/types";
 
-const companyJobs = mockJobs.filter((j) => j.companyId === "c1");
+function ApplicantsPageInner() {
+  const searchParams = useSearchParams();
+  const initialJobId = searchParams.get("job") ?? "all";
 
-export default function ApplicantsPage() {
-  const [applications, setApplications] = useState(mockCompanyApplications);
-  const [filterJob, setFilterJob] = useState("all");
+  const [companyJobs, setCompanyJobs] = useState<JobOffer[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filterJob, setFilterJob] = useState(initialJobId);
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCompatibility, setFilterCompatibility] = useState("all");
   const [actionDialog, setActionDialog] = useState<{
@@ -47,37 +53,91 @@ export default function ApplicantsPage() {
     action: "Accept" | "Reject";
   } | null>(null);
   const [comment, setComment] = useState("");
+  const [actioning, setActioning] = useState(false);
+
+  // Load company jobs once
+  useEffect(() => {
+    async function loadJobs() {
+      try {
+        const res = await jobsApi.companyList();
+        const jobs = (res?.data?.data ?? []).map(adaptJob);
+        setCompanyJobs(jobs);
+      } catch {
+        // keep empty
+      }
+    }
+    loadJobs();
+  }, []);
+
+  // Load applications when job filter changes
+  const loadApplications = useCallback(async (jobId: string) => {
+    setIsLoading(true);
+    try {
+      const jobs = jobId !== "all" ? [{ id: jobId }] : companyJobs;
+      if (jobs.length === 0) { setIsLoading(false); return; }
+
+      const results = await Promise.all(
+        jobs.map((j) =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          applicationsApi.jobApplications(j.id).then((r: any) => r?.data?.data ?? [])
+        )
+      );
+      const flat: ApiApplication[] = results.flat();
+      setApplications(flat.map(adaptApplication));
+    } catch {
+      setApplications([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [companyJobs]);
+
+  useEffect(() => {
+    if (filterJob === "all" && companyJobs.length > 0) {
+      loadApplications("all");
+    } else if (filterJob !== "all") {
+      loadApplications(filterJob);
+    } else if (filterJob === "all" && companyJobs.length === 0) {
+      setIsLoading(false);
+    }
+  }, [filterJob, companyJobs, loadApplications]);
 
   const filtered = applications.filter((app) => {
     if (filterJob !== "all" && app.jobId !== filterJob) return false;
     if (filterStatus !== "all" && app.currentStatus !== filterStatus) return false;
     if (filterCompatibility !== "all") {
-      if (filterCompatibility === "u49" && app.compatibilityScore > 49) return false;
-      if (filterCompatibility === "u20" && app.compatibilityScore > 20) return false;
-      if (filterCompatibility !== "u49" && filterCompatibility !== "u20" && app.compatibilityScore < Number(filterCompatibility)) return false;
+      const score = app.compatibilityScore;
+      if (score === null) return false;
+      if (filterCompatibility === "67-100" && score < 67) return false;
+      if (filterCompatibility === "34-66" && (score < 34 || score > 66)) return false;
+      if (filterCompatibility === "0-33" && score > 33) return false;
     }
     return true;
   });
 
-  const handleDecision = () => {
+  const handleDecision = async () => {
     if (!actionDialog) return;
     const { app, action } = actionDialog;
-    setApplications((prev) =>
-      prev.map((a) =>
-        a.id === app.id
-          ? {
-              ...a,
-              currentStatus: action === "Accept" ? ("Accepted" as const) : ("Rejected" as const),
-              decision: action,
-              decisionDate: new Date(),
-              comments: comment || undefined,
-              updatedAt: new Date(),
-            }
-          : a
-      )
-    );
-    setActionDialog(null);
-    setComment("");
+    setActioning(true);
+    try {
+      if (action === "Accept") {
+        await applicationsApi.accept(Number(app.id), comment || undefined);
+      } else {
+        await applicationsApi.reject(Number(app.id), comment || undefined);
+      }
+      setApplications((prev) =>
+        prev.map((a) =>
+          a.id === app.id
+            ? { ...a, currentStatus: action === "Accept" ? ("Accepted" as const) : ("Rejected" as const) }
+            : a
+        )
+      );
+    } catch {
+      // silently fail
+    } finally {
+      setActioning(false);
+      setActionDialog(null);
+      setComment("");
+    }
   };
 
   return (
@@ -125,12 +185,9 @@ export default function ApplicantsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Compatibility</SelectItem>
-                  <SelectItem value="90"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-green inline-block" />90%+</span></SelectItem>
-                  <SelectItem value="80"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-green inline-block" />80%+</span></SelectItem>
-                  <SelectItem value="70"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-yellow inline-block" />70%+</span></SelectItem>
-                  <SelectItem value="50"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-yellow inline-block" />50%+</span></SelectItem>
-                  <SelectItem value="u49"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-red inline-block" />≤49%</span></SelectItem>
-                  <SelectItem value="u20"><span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cvision-red inline-block" />≤20%</span></SelectItem>
+                  <SelectItem value="67-100">67% – 100%</SelectItem>
+                  <SelectItem value="34-66">34% – 66%</SelectItem>
+                  <SelectItem value="0-33">0% – 33%</SelectItem>
                 </SelectContent>
               </Select>
               {(filterJob !== "all" || filterStatus !== "all" || filterCompatibility !== "all") && (
@@ -156,107 +213,121 @@ export default function ApplicantsPage() {
       {/* Table */}
       <Card>
         <CardContent className="p-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Candidate</TableHead>
-                  <TableHead>Job Position</TableHead>
-                  <TableHead>Compatibility</TableHead>
-                  <TableHead>Test</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Applied</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((app) => (
-                  <TableRow key={app.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground">
-                          {app.candidateName?.charAt(0)}
-                        </div>
-                        <span className="font-medium">{app.candidateName}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{app.jobTitle}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`font-semibold ${
-                          app.compatibilityScore >= 80
-                            ? "text-cvision-green"
-                            : app.compatibilityScore >= 60
-                            ? "text-cvision-yellow"
-                            : "text-cvision-red"
-                        }`}
-                      >
-                        {app.compatibilityScore}%
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {app.testStatus ? (
-                        <div>
-                          <StatusBadge status={app.testStatus} />
-                          {app.testScore !== undefined && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Score: {app.testScore}%
-                            </p>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cvision-green" />
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Candidate</TableHead>
+                      <TableHead>Job Position</TableHead>
+                      <TableHead>Compatibility</TableHead>
+                      <TableHead>Test</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Applied</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((app) => (
+                      <TableRow key={app.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            {app.candidatePhotoPath ? (
+                              <img
+                                src={`${process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://127.0.0.1:8000/storage"}/${app.candidatePhotoPath}`}
+                                alt={app.candidateName ?? ""}
+                                className="w-8 h-8 rounded-full object-cover shrink-0"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-cvision-bar flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
+                                {app.candidateName?.charAt(0)}
+                              </div>
+                            )}
+                            <span className="font-medium">{app.candidateName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">{app.jobTitle}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`font-semibold ${
+                              app.compatibilityScore === null
+                                ? "text-muted-foreground"
+                                : app.compatibilityScore >= 67
+                                ? "text-cvision-green"
+                                : app.compatibilityScore >= 34
+                                ? "text-cvision-yellow"
+                                : "text-cvision-red"
+                            }`}
+                          >
+                            {app.compatibilityScore !== null ? `${app.compatibilityScore}%` : "N/A"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {app.testStatus ? (
+                            <div>
+                              <StatusBadge status={app.testStatus} />
+                              {app.testScore !== undefined && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Score: {app.testScore}%
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Not started</span>
                           )}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Not started</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={app.currentStatus} />
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {app.appliedDate.toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Link href={`/company/recruitment/${app.candidateId}`}>
-                          <Button variant="ghost" size="sm" title="View Profile">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </Link>
-                        {app.currentStatus === "Pending" && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title="Accept"
-                              onClick={() =>
-                                setActionDialog({ app, action: "Accept" })
-                              }
-                            >
-                              <CheckCircle2 className="w-4 h-4 text-cvision-green" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title="Reject"
-                              onClick={() =>
-                                setActionDialog({ app, action: "Reject" })
-                              }
-                            >
-                              <XCircle className="w-4 h-4 text-cvision-red" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={app.currentStatus} />
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {app.appliedDate.toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Link href={`/company/recruitment/${app.id}`}>
+                              <Button variant="ghost" size="sm" title="View Profile">
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                            {app.currentStatus === "Pending" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title="Accept"
+                                  onClick={() => setActionDialog({ app, action: "Accept" })}
+                                >
+                                  <CheckCircle2 className="w-4 h-4 text-cvision-green" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title="Reject"
+                                  onClick={() => setActionDialog({ app, action: "Reject" })}
+                                >
+                                  <XCircle className="w-4 h-4 text-cvision-red" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
-          {filtered.length === 0 && (
-            <p className="text-center text-muted-foreground py-8">
-              No applicants match the current filters.
-            </p>
+              {filtered.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  No applicants match the current filters.
+                </p>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -289,13 +360,22 @@ export default function ApplicantsPage() {
             </Button>
             <Button
               variant={actionDialog?.action === "Accept" ? "default" : "destructive"}
+              disabled={actioning}
               onClick={handleDecision}
             >
-              {actionDialog?.action === "Accept" ? "Accept Candidate" : "Reject Candidate"}
+              {actioning ? "Processing…" : actionDialog?.action === "Accept" ? "Accept Candidate" : "Reject Candidate"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </motion.div>
+  );
+}
+
+export default function ApplicantsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cvision-green" /></div>}>
+      <ApplicantsPageInner />
+    </Suspense>
   );
 }

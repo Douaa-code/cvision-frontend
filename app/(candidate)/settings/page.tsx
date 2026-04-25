@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, Shield, AlertTriangle, Check } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useRouter } from "next/navigation";
 
 const tabs = [
   { id: "notifications", label: "Notifications", icon: Bell },
@@ -27,12 +30,25 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 export default function SettingsPage() {
+  const { logout } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("notifications");
   const [saved, setSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
 
   // Notifications state
   const [emailAppAccepted, setEmailAppAccepted] = useState(true);
   const [emailAppRejected, setEmailAppRejected] = useState(true);
+
+  useEffect(() => {
+    apiClient.get<{ success: boolean; data: { email_app_accepted: boolean; email_app_rejected: boolean } }>(
+      "/candidate/notification-preferences"
+    ).then((res) => {
+      setEmailAppAccepted(res.data.email_app_accepted);
+      setEmailAppRejected(res.data.email_app_rejected);
+    }).catch(() => {});
+  }, []);
   // Security state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -43,12 +59,23 @@ export default function SettingsPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
-  const handleSaveProfile = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSaveNotifications = async () => {
+    setSavingPrefs(true);
+    try {
+      await apiClient.put("/candidate/notification-preferences", {
+        email_app_accepted: emailAppAccepted,
+        email_app_rejected: emailAppRejected,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // silent
+    } finally {
+      setSavingPrefs(false);
+    }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     setPasswordError("");
     if (!currentPassword) {
       setPasswordError("Current password is required.");
@@ -62,11 +89,20 @@ export default function SettingsPage() {
       setPasswordError("Passwords do not match.");
       return;
     }
-    setSaved(true);
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      await apiClient.put("/password", {
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirmation: confirmPassword,
+      });
+      setSaved(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setPasswordError("Current password is incorrect or request failed.");
+    }
   };
 
   return (
@@ -132,7 +168,9 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button onClick={handleSaveProfile}>Save Preferences</Button>
+              <Button onClick={handleSaveNotifications} disabled={savingPrefs}>
+                {savingPrefs ? "Saving…" : "Save Preferences"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -254,13 +292,22 @@ export default function SettingsPage() {
             </Button>
             <Button
               variant="destructive"
-              disabled={deleteConfirmText !== "DELETE"}
-              onClick={() => {
-                setShowDeleteDialog(false);
-                setDeleteConfirmText("");
+              disabled={deleteConfirmText !== "DELETE" || deleting}
+              onClick={async () => {
+                setDeleting(true);
+                try {
+                  await apiClient.delete("/user");
+                  await logout();
+                  router.push("/login");
+                } catch {
+                  setShowDeleteDialog(false);
+                  setDeleteConfirmText("");
+                } finally {
+                  setDeleting(false);
+                }
               }}
             >
-              Delete My Account
+              {deleting ? "Deleting…" : "Delete My Account"}
             </Button>
           </DialogFooter>
         </DialogContent>

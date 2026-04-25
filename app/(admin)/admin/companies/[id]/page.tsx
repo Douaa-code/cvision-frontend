@@ -1,11 +1,10 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
@@ -18,9 +17,10 @@ import {
   Briefcase,
   Users,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { mockAdminCompanies } from "@/lib/mock-data/admin";
+import { adminApi, AdminCompanyDetail } from "@/lib/api/admin";
 
 export default function CompanyDetailPage({
   params,
@@ -28,9 +28,27 @@ export default function CompanyDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const company = mockAdminCompanies.find((c) => c.id === id);
+  const [company, setCompany] = useState<AdminCompanyDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!company) {
+  useEffect(() => {
+    adminApi
+      .getCompany(Number(id))
+      .then(setCompany)
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (notFound || !company) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Company not found.</p>
@@ -40,6 +58,9 @@ export default function CompanyDetailPage({
       </div>
     );
   }
+
+  const rc = company.documents.commercialRegister;
+  const nif = company.documents.nifDocument;
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -85,14 +106,16 @@ export default function CompanyDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Description */}
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                <Building2 className="w-5 h-5" /> About
-              </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">{company.description}</p>
-            </CardContent>
-          </Card>
+          {company.description && (
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <Building2 className="w-5 h-5" /> About
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">{company.description}</p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Documents */}
           <Card>
@@ -102,30 +125,38 @@ export default function CompanyDetailPage({
               </h2>
               <Separator className="mb-4" />
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 bg-cvision-container rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-cvision-blue" />
-                    <div>
-                      <p className="text-sm font-medium">Commercial Register (RC)</p>
-                      <p className="text-xs text-muted-foreground">{company.documents.commercialRegister.filename}</p>
+                {rc ? (
+                  <div className="flex items-center justify-between p-4 bg-cvision-container rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-cvision-blue" />
+                      <div>
+                        <p className="text-sm font-medium">Commercial Register (RC)</p>
+                        <p className="text-xs text-muted-foreground">{rc.filename}</p>
+                      </div>
                     </div>
+                    <a href={rc.url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm">View</Button>
+                    </a>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Uploaded {company.documents.commercialRegister.uploadedAt.toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-cvision-container rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-cvision-blue" />
-                    <div>
-                      <p className="text-sm font-medium">NIF Document</p>
-                      <p className="text-xs text-muted-foreground">{company.documents.nifDocument.filename}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No RC document uploaded.</p>
+                )}
+                {nif ? (
+                  <div className="flex items-center justify-between p-4 bg-cvision-container rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-cvision-blue" />
+                      <div>
+                        <p className="text-sm font-medium">NIF Document</p>
+                        <p className="text-xs text-muted-foreground">{nif.filename}</p>
+                      </div>
                     </div>
+                    <a href={nif.url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm">View</Button>
+                    </a>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Uploaded {company.documents.nifDocument.uploadedAt.toLocaleDateString()}
-                  </p>
-                </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No NIF document uploaded.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -170,14 +201,14 @@ export default function CompanyDetailPage({
                 <Separator />
                 <div className="flex justify-between">
                   <span className="text-muted-foreground flex items-center gap-1"><Calendar className="w-3 h-3" /> Registered</span>
-                  <span className="font-semibold">{company.registrationDate.toLocaleDateString()}</span>
+                  <span className="font-semibold">{new Date(company.registrationDate).toLocaleDateString()}</span>
                 </div>
                 {company.approvedDate && (
                   <>
                     <Separator />
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Approved</span>
-                      <span className="font-semibold">{company.approvedDate.toLocaleDateString()}</span>
+                      <span className="font-semibold">{new Date(company.approvedDate).toLocaleDateString()}</span>
                     </div>
                   </>
                 )}

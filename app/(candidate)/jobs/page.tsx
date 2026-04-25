@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,21 @@ import {
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { JobCard } from "@/components/shared/JobCard";
-import { mockJobs } from "@/lib/mock-data/jobs";
 import { WILAYAS } from "@/lib/constants/wilayas";
 import { DomainEnum, ContractEnum, SalaryEnum } from "@/types/enums";
 import {
   staggerContainerVariants,
   staggerItemVariants,
 } from "@/lib/animations/variants";
+import { jobsApi, savedJobsApi } from "@/lib/api/jobs";
+import { adaptJob } from "@/lib/api/adapters";
+import type { JobOffer } from "@/types";
+
+const SORT_BY_API_MAP: Record<string, string> = {
+  match: "best_match",
+  date: "most_recent",
+  applications: "most_popular",
+};
 
 export default function JobSearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,8 +35,27 @@ export default function JobSearchPage() {
   const [domainFilter, setDomainFilter] = useState("all");
   const [contractFilter, setContractFilter] = useState("all");
   const [salaryFilter, setSalaryFilter] = useState("all");
+  const [compatibilityFilter, setCompatibilityFilter] = useState("all");
   const [sortBy, setSortBy] = useState("match");
-  const [jobs, setJobs] = useState(mockJobs);
+  const [jobs, setJobs] = useState<JobOffer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setIsLoading(true);
+      try {
+        const res = await jobsApi.list({ sort_by: SORT_BY_API_MAP[sortBy] ?? "most_recent" });
+        const rawJobs = res?.data?.data ?? [];
+        setJobs(rawJobs.map(adaptJob));
+      } catch {
+        // keep empty on error
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy]);
 
   const filteredJobs = useMemo(() => {
     let result = [...jobs];
@@ -54,22 +81,39 @@ export default function JobSearchPage() {
     if (salaryFilter !== "all") {
       result = result.filter((j) => j.salaryRange === salaryFilter);
     }
+    if (compatibilityFilter !== "all") {
+      result = result.filter((j) => {
+        const s = j.matchPercentage ?? null;
+        if (s === null) return false;
+        if (compatibilityFilter === "0-33") return s <= 33;
+        if (compatibilityFilter === "34-66") return s >= 34 && s <= 66;
+        if (compatibilityFilter === "67-100") return s >= 67;
+        return true;
+      });
+    }
 
     if (sortBy === "match") {
-      result.sort((a, b) => (b.matchPercentage ?? 0) - (a.matchPercentage ?? 0));
-    } else if (sortBy === "date") {
-      result.sort((a, b) => b.postedDate.getTime() - a.postedDate.getTime());
-    } else if (sortBy === "applications") {
-      result.sort((a, b) => b.applicationsCount - a.applicationsCount);
+      result.sort((a, b) => (b.matchPercentage ?? -1) - (a.matchPercentage ?? -1));
     }
 
     return result;
-  }, [jobs, searchQuery, wilayaFilter, domainFilter, contractFilter, salaryFilter, sortBy]);
+  }, [jobs, searchQuery, wilayaFilter, domainFilter, contractFilter, salaryFilter, compatibilityFilter, sortBy]);
 
-  const toggleSave = (jobId: string) => {
-    setJobs((prev) =>
-      prev.map((j) => (j.id === jobId ? { ...j, saved: !j.saved } : j))
-    );
+  const toggleSave = async (jobId: string) => {
+    const job = jobs.find((j) => j.id === jobId);
+    if (!job) return;
+    try {
+      if (job.saved) {
+        await savedJobsApi.unsave(Number(jobId));
+      } else {
+        await savedJobsApi.save(Number(jobId));
+      }
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, saved: !j.saved } : j))
+      );
+    } catch {
+      // silently fail
+    }
   };
 
   const resetFilters = () => {
@@ -78,6 +122,7 @@ export default function JobSearchPage() {
     setDomainFilter("all");
     setContractFilter("all");
     setSalaryFilter("all");
+    setCompatibilityFilter("all");
   };
 
   return (
@@ -145,6 +190,18 @@ export default function JobSearchPage() {
           </SelectContent>
         </Select>
 
+        <Select value={compatibilityFilter} onValueChange={setCompatibilityFilter}>
+          <SelectTrigger className="w-full sm:w-[160px]">
+            <SelectValue placeholder="Compatibility" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Scores</SelectItem>
+            <SelectItem value="67-100">67% – 100%</SelectItem>
+            <SelectItem value="34-66">34% – 66%</SelectItem>
+            <SelectItem value="0-33">0% – 33%</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="w-full sm:w-[160px]">
             <SelectValue placeholder="Sort by" />
@@ -156,9 +213,9 @@ export default function JobSearchPage() {
           </SelectContent>
         </Select>
 
-       <Button 
-       variant="ghost" 
-       size="sm" 
+       <Button
+       variant="ghost"
+       size="sm"
        onClick={resetFilters}
        className="text-cvision-green bg-cvision-green/10 hover:bg-cvision-green hover:text-white rounded-lg px-4 shadow-sm hover:shadow-md transition-all duration-200"
        >
@@ -167,32 +224,40 @@ export default function JobSearchPage() {
       </div>
 
       {/* Results */}
-      <div className="flex justify-end mb-4">
-        <span className="text-sm text-muted-foreground">
-          {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""} found
-        </span>
-      </div>
-
-      {filteredJobs.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-muted-foreground">No jobs match your search criteria.</p>
-          <Button variant="outline" className="mt-4" onClick={resetFilters}>
-            Clear Filters
-          </Button>
+      {isLoading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cvision-green" />
         </div>
       ) : (
-        <motion.div
-          variants={staggerContainerVariants}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
-          {filteredJobs.map((job) => (
-            <motion.div key={job.id} variants={staggerItemVariants}>
-              <JobCard job={job} onToggleSave={toggleSave} />
+        <>
+          <div className="flex justify-end mb-4">
+            <span className="text-sm text-muted-foreground">
+              {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""} found
+            </span>
+          </div>
+
+          {filteredJobs.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">No jobs match your search criteria.</p>
+              <Button variant="outline" className="mt-4" onClick={resetFilters}>
+                Clear Filters
+              </Button>
+            </div>
+          ) : (
+            <motion.div
+              variants={staggerContainerVariants}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              {filteredJobs.map((job) => (
+                <motion.div key={job.id} variants={staggerItemVariants}>
+                  <JobCard job={job} onToggleSave={toggleSave} />
+                </motion.div>
+              ))}
             </motion.div>
-          ))}
-        </motion.div>
+          )}
+        </>
       )}
     </div>
   );

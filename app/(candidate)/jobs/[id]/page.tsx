@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,7 +22,10 @@ import {
 } from "lucide-react";
 import { MatchScore } from "@/components/shared/MatchScore";
 import { JobCard } from "@/components/shared/JobCard";
-import { mockJobs } from "@/lib/mock-data/jobs";
+import { jobsApi, savedJobsApi } from "@/lib/api/jobs";
+import { applicationsApi } from "@/lib/api/applications";
+import { adaptJob } from "@/lib/api/adapters";
+import type { JobOffer } from "@/types";
 
 export default function JobDetailPage({
   params,
@@ -30,13 +33,103 @@ export default function JobDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const job = mockJobs.find((j) => j.id === id) ?? mockJobs[0];
-  const [saved, setSaved] = useState(job.saved ?? false);
+  const [job, setJob] = useState<JobOffer | null>(null);
+  const [similarJobs, setSimilarJobs] = useState<JobOffer[]>([]);
+  const [saved, setSaved] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEmployed, setIsEmployed] = useState(false);
 
-  const similarJobs = mockJobs
-    .filter((j) => j.id !== job.id && j.domain === job.domain)
-    .slice(0, 3);
+  useEffect(() => {
+    async function load() {
+      try {
+        const [jobRes, allJobsRes] = await Promise.all([
+          jobsApi.show(id),
+          jobsApi.list(),
+        ]);
+        const rawJob = jobRes.data;
+        const adapted = adaptJob(rawJob);
+        setJob(adapted);
+        setSaved(rawJob.is_saved ?? false);
+        setApplied(rawJob.has_applied ?? false);
+
+        const allJobs = (allJobsRes?.data?.data ?? []).map(adaptJob);
+        setSimilarJobs(
+          allJobs
+            .filter((j) => j.id !== String(id) && j.domain === adapted.domain)
+            .slice(0, 3)
+        );
+
+        // Check if candidate is employed
+        try {
+          const appsRes = await applicationsApi.myApplications();
+          const rawApps = Array.isArray(appsRes?.data)
+            ? appsRes.data
+            : (appsRes?.data?.data ?? []);
+          const hasConfirmedApp = rawApps.some((app: any) => app.candidate_confirmed_at);
+          setIsEmployed(hasConfirmedApp);
+        } catch {
+          setIsEmployed(false);
+        }
+      } catch {
+        // keep null on error
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    load();
+  }, [id]);
+
+  const handleToggleSave = async () => {
+    if (!job || saving) return;
+    setSaving(true);
+    try {
+      if (saved) {
+        await savedJobsApi.unsave(Number(job.id));
+      } else {
+        await savedJobsApi.save(Number(job.id));
+      }
+      setSaved(!saved);
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleApply = async () => {
+    if (!job) return;
+    setApplying(true);
+    try {
+      await applicationsApi.apply(Number(job.id));
+      setApplied(true);
+    } catch {
+      // silently fail — user can try again
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cvision-green" />
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-muted-foreground">Job offer not found.</p>
+        <Link href="/jobs">
+          <Button variant="outline" className="mt-4">Back to Jobs</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -59,7 +152,7 @@ export default function JobDetailPage({
                   <h1 className="text-2xl font-bold mb-1">{job.jobTitle}</h1>
                   <p className="text-muted-foreground">{job.companyName}</p>
                 </div>
-                <button onClick={() => setSaved(!saved)}>
+                <button onClick={handleToggleSave}>
                   {saved ? (
                     <BookmarkCheck className="w-6 h-6 text-cvision-green" />
                   ) : (
@@ -70,7 +163,7 @@ export default function JobDetailPage({
 
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                 <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{job.wilaya}</span>
-                <span className="flex items-center gap-1"><Banknote className="w-4 h-4" />{job.salaryRange}</span>
+                {job.salaryRange && <span className="flex items-center gap-1"><Banknote className="w-4 h-4" />{job.salaryRange}</span>}
                 <span className="flex items-center gap-1"><Briefcase className="w-4 h-4" />{job.contractType}</span>
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{job.postedDate.toLocaleDateString()}</span>
                 <span className="flex items-center gap-1"><Users className="w-4 h-4" />{job.applicationsCount} applicants</span>
@@ -78,7 +171,9 @@ export default function JobDetailPage({
 
               <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1"><Tag className="w-4 h-4" />{job.domain}</span>
-                <span className="flex items-center gap-1"><GraduationCap className="w-4 h-4" />{job.experienceRequired}</span>
+                {job.experienceRequired && (
+                  <span className="flex items-center gap-1"><GraduationCap className="w-4 h-4" />{job.experienceRequired}</span>
+                )}
                 {job.requireQCMTest && (
                   <span className="flex items-center gap-1 text-cvision-green font-medium">
                     <ClipboardCheck className="w-4 h-4" />Test Required
@@ -93,7 +188,7 @@ export default function JobDetailPage({
             <Card>
               <CardContent className="p-6">
                 <h2 className="font-semibold mb-3">Match Score</h2>
-                <MatchScore score={job.matchPercentage} size="lg" />
+                <MatchScore score={job.matchPercentage ?? null} size="lg" />
                 <p className="text-sm text-muted-foreground mt-2">
                   Based on your skills, experience, and education, you are a{" "}
                   <strong>{job.matchPercentage}%</strong> match for this position.
@@ -110,29 +205,35 @@ export default function JobDetailPage({
                 {job.jobDescription}
               </p>
 
-              <Separator className="my-6" />
+              {job.requirements.length > 0 && (
+                <>
+                  <Separator className="my-6" />
+                  <h2 className="font-semibold mb-3">Requirements</h2>
+                  <ul className="space-y-2">
+                    {job.requirements.map((req, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-cvision-green mt-0.5 flex-shrink-0" />
+                        {req}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
 
-              <h2 className="font-semibold mb-3">Requirements</h2>
-              <ul className="space-y-2">
-                {job.requirements.map((req, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-cvision-green mt-0.5 flex-shrink-0" />
-                    {req}
-                  </li>
-                ))}
-              </ul>
-
-              <Separator className="my-6" />
-
-              <h2 className="font-semibold mb-3">Responsibilities</h2>
-              <ul className="space-y-2">
-                {job.responsibilities.map((resp, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-cvision-blue mt-0.5 flex-shrink-0" />
-                    {resp}
-                  </li>
-                ))}
-              </ul>
+              {job.responsibilities.length > 0 && (
+                <>
+                  <Separator className="my-6" />
+                  <h2 className="font-semibold mb-3">Responsibilities</h2>
+                  <ul className="space-y-2">
+                    {job.responsibilities.map((resp, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-cvision-blue mt-0.5 flex-shrink-0" />
+                        {resp}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -148,24 +249,42 @@ export default function JobDetailPage({
                   <p className="font-semibold">Application Submitted!</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     {job.requireQCMTest
-                      ? "You'll need to complete a test for this position."
-                      : "The company will review your application."}
+                      ? "This position requires a test. Complete it to strengthen your application."
+                      : "The company will review your application shortly."}
                   </p>
                   {job.requireQCMTest && (
-                    <Link href={`/tests/${job.linkedTestId}`}>
-                      <Button className="mt-4 w-full">Take Test</Button>
+                    <Link href="/tests">
+                      <Button className="mt-4 w-full">Go to My Tests</Button>
                     </Link>
                   )}
                 </div>
+              ) : isEmployed ? (
+                <div className="text-center py-4 bg-blue-50 rounded-lg p-4">
+                  <p className="font-semibold text-sm mb-2">You are currently employed</p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    To apply for new jobs, please request separation from your current employer in your dashboard.
+                  </p>
+                  <Link href="/dashboard">
+                    <Button variant="outline" className="w-full text-xs">
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                </div>
               ) : (
                 <>
-                  <Button className="w-full" size="lg" onClick={() => setApplied(true)}>
-                    Apply Now
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={handleApply}
+                    disabled={applying}
+                  >
+                    {applying ? "Applying…" : "Apply Now"}
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => setSaved(!saved)}
+                    onClick={handleToggleSave}
+                    disabled={saving}
                   >
                     {saved ? "Saved" : "Save Job"}
                   </Button>
@@ -187,8 +306,10 @@ export default function JobDetailPage({
                   <p className="text-xs text-muted-foreground">{job.domain}</p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                A verified company on CVision platform, located in {job.wilaya}.
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {job.companyDescription
+                  ? job.companyDescription
+                  : `A verified company on CVision platform, located in ${job.wilaya}.`}
               </p>
             </CardContent>
           </Card>

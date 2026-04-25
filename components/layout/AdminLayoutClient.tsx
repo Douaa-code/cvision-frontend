@@ -9,6 +9,8 @@ import {
   Briefcase,
   ClipboardList,
   Settings,
+  Image,
+  FileCheck,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import type { SidebarItem } from "@/components/layout/Sidebar";
@@ -21,6 +23,8 @@ const adminSidebarItems: SidebarItem[] = [
   { label: "Users Management", href: "/admin/users", icon: UserCog },
   { label: "Job Offers", href: "/admin/jobs", icon: Briefcase },
   { label: "Applications", href: "/admin/applications", icon: ClipboardList },
+  { label: "Ads Management", href: "/admin/ads", icon: Image },
+  { label: "Separation Requests", href: "/admin/separation-requests", icon: FileCheck },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 

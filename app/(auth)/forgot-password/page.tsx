@@ -13,14 +13,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleCheck = () => {
-    router.push("/change-password");
+  const handleCheck = async () => {
+    setError("");
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await apiClient.post("/forgot-password", { email });
+      router.push(`/change-password?email=${encodeURIComponent(email)}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -43,10 +65,16 @@ export default function ForgotPasswordPage() {
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl">Forgot Password?</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Please enter your email address to receive a verification code
+              Enter your email address to receive a verification code
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="bg-cvision-red-bg text-cvision-red text-sm p-3 rounded-lg">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -55,11 +83,19 @@ export default function ForgotPasswordPage() {
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCheck(); }}
               />
             </div>
 
-            <Button className="w-full" onClick={handleCheck}>
-              Check
+            <Button className="w-full" onClick={handleCheck} disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Sending code...
+                </>
+              ) : (
+                "Send Verification Code"
+              )}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">

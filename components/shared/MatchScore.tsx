@@ -3,16 +3,16 @@
 import { cn } from "@/lib/utils";
 
 interface MatchScoreProps {
-  score: number;
+  score: number | null;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   className?: string;
 }
 
 function getColor(score: number) {
-  if (score >= 85) return "#00C897";
-  if (score >= 70) return "#FFC107";
-  return "#9CA3AF";
+  if (score >= 67) return "#00C897";
+  if (score >= 34) return "#FFC107";
+  return "#E74C3C";
 }
 
 const sizes = {
@@ -27,8 +27,22 @@ export function MatchScore({
   showLabel = true,
   className,
 }: MatchScoreProps) {
-  const color = getColor(score);
   const { width, stroke, fontSize } = sizes[size];
+
+  if (score === null) {
+    return (
+      <div className={cn("flex items-center gap-1 sm:gap-2", className)}>
+        <svg width={width} height={width} className="-rotate-90">
+          <circle cx={width / 2} cy={width / 2} r={(width - stroke) / 2} fill="none" stroke="#E5E7EB" strokeWidth={stroke} />
+        </svg>
+        {showLabel && (
+          <span className={cn("font-bold text-muted-foreground", fontSize)}>N/A</span>
+        )}
+      </div>
+    );
+  }
+
+  const color = getColor(score);
   const radius = (width - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;

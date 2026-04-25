@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { jobsApi } from "@/lib/api/jobs";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, X, CheckCircle2 } from "lucide-react";
 import { DOMAINS } from "@/lib/constants/domains";
-import { getWilayaOptions, getPostalCodeByWilaya } from "@/lib/constants/wilayas";
+import { getWilayaOptions, getWilayaCode } from "@/lib/constants/wilayas";
 import { ExperienceEnum, SalaryEnum, ContractEnum } from "@/types/enums";
 
 const jobSchema = z.object({
@@ -50,6 +51,9 @@ export default function CreateJobPage() {
   const [reqInput, setReqInput] = useState("");
   const [respInput, setRespInput] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [postalSuffix, setPostalSuffix] = useState("");
 
   const {
     register,
@@ -69,8 +73,15 @@ export default function CreateJobPage() {
 
   const handleWilayaChange = (value: string) => {
     setValue("wilaya", value);
-    const pc = getPostalCodeByWilaya(value);
-    if (pc) setValue("postalCode", pc);
+    const code = getWilayaCode(value) ?? "";
+    setPostalSuffix("000");
+    setValue("postalCode", code + "000");
+  };
+
+  const handlePostalSuffixChange = (val: string) => {
+    const digits = val.replace(/\D/g, "").slice(0, 3);
+    setPostalSuffix(digits);
+    setValue("postalCode", (getWilayaCode(watchWilaya) ?? "") + digits);
   };
 
   const addRequirement = () => {
@@ -87,8 +98,40 @@ export default function CreateJobPage() {
     }
   };
 
-  const onSubmit = () => {
-    setSubmitted(true);
+  const parseSalary = (range: string): { salary_min: number | null; salary_max: number | null } => {
+    if (range === SalaryEnum.RANGE_1) return { salary_min: 0,      salary_max: 50000  };
+    if (range === SalaryEnum.RANGE_2) return { salary_min: 50000,  salary_max: 100000 };
+    if (range === SalaryEnum.RANGE_3) return { salary_min: 100000, salary_max: 200000 };
+    if (range === SalaryEnum.RANGE_4) return { salary_min: 200000, salary_max: null   };
+    return { salary_min: null, salary_max: null };
+  };
+
+  const onSubmit = async (data: JobFormData) => {
+    setSubmitting(true);
+    setSubmitError(null);
+    const { salary_min, salary_max } = parseSalary(data.salaryRange);
+    try {
+      await jobsApi.create({
+        title: data.jobTitle,
+        description: data.jobDescription,
+        domain: data.domain,
+        wilaya: data.wilaya,
+        postal_code: data.postalCode,
+        salary_min,
+        salary_max,
+        experience_required: data.experienceRequired,
+        contract_type: data.contractType,
+        positions: parseInt(data.maxAcceptedCandidates, 10),
+        has_test: data.requireQCMTest,
+        requirements,
+        responsibilities,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to create job offer. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -204,7 +247,19 @@ export default function CreateJobPage() {
 
               <div className="space-y-2">
                 <Label>Postal Code</Label>
-                <Input value={watchWilaya ? getPostalCodeByWilaya(watchWilaya) ?? "" : ""} readOnly className="bg-muted" />
+                <div className="flex rounded-md border border-input overflow-hidden">
+                  <span className="flex items-center px-3 bg-muted text-sm font-mono border-r border-input text-muted-foreground select-none min-w-[2.75rem] justify-center">
+                    {watchWilaya ? (getWilayaCode(watchWilaya) ?? "—") : "—"}
+                  </span>
+                  <input
+                    value={postalSuffix}
+                    onChange={(e) => handlePostalSuffixChange(e.target.value)}
+                    maxLength={3}
+                    placeholder="000"
+                    disabled={!watchWilaya}
+                    className="flex-1 px-3 py-2 text-sm bg-transparent outline-none font-mono placeholder:text-muted-foreground disabled:opacity-50"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -314,8 +369,15 @@ export default function CreateJobPage() {
         </Card>
 
         {/* Submit */}
+        {submitError && (
+          <p className="text-sm text-cvision-red bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+            {submitError}
+          </p>
+        )}
         <div className="flex gap-3">
-          <Button type="submit" size="lg">Publish Job Offer</Button>
+          <Button type="submit" size="lg" disabled={submitting}>
+            {submitting ? "Publishing…" : "Publish Job Offer"}
+          </Button>
           <Button type="button" variant="outline" size="lg" onClick={() => router.push("/company/jobs")}>
             Cancel
           </Button>

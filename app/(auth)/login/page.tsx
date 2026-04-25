@@ -19,7 +19,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
-
+import { authApi } from "@/lib/api/auth";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -28,17 +29,19 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-const MOCK_USERS = [
-  { email: "candidate@cvision.dz", password: "123456", role: "candidate" as const, redirect: "/dashboard" },
-  { email: "company@cvision.dz", password: "123456", role: "company" as const, redirect: "/company/dashboard" },
-  { email: "admin@cvision.dz", password: "123456", role: "admin" as const, redirect: "/admin/dashboard" },
-];
+const ROLE_REDIRECTS: Record<string, string> = {
+  candidate: "/dashboard",
+  company: "/company/dashboard",
+  admin: "/admin/dashboard",
+};
 
 export default function LoginPage() {
   const router = useRouter();
+  const { loginWithToken } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   const {
     register,
@@ -52,17 +55,27 @@ export default function LoginPage() {
     setIsLoading(true);
     setLoginError("");
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const res = await authApi.login({ email: data.email, password: data.password });
+      const { user, token } = res.data;
 
-    const user = MOCK_USERS.find(
-      (u) => u.email === data.email && u.password === data.password
-    );
+      const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://127.0.0.1:8000/storage";
+      const profilePhoto = user.candidate?.profile_photo
+        ? `${storageUrl}/${user.candidate.profile_photo}`
+        : null;
 
-    if (user) {
-      router.push(user.redirect);
-    } else {
-      setLoginError("Invalid email or password. Try one of the demo accounts below.");
+      loginWithToken(
+        { id: user.id, name: user.name, email: user.email, role: user.role as "admin" | "company" | "candidate", profilePhoto },
+        token,
+        rememberMe
+      );
+
+      const redirect = ROLE_REDIRECTS[user.role] ?? "/dashboard";
+      router.push(redirect);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Invalid email or password.";
+      setLoginError(message);
       setIsLoading(false);
     }
   };
@@ -76,8 +89,8 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         <Link
-        href="/"
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+          href="/"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -145,8 +158,12 @@ export default function LoginPage() {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Checkbox id="remember" />
-                  <Label htmlFor="remember" className="text-sm font-normal">
+                  <Checkbox
+                    id="remember"
+                    checked={rememberMe}
+                    onCheckedChange={(c) => setRememberMe(c === true)}
+                  />
+                  <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
                     Remember me
                   </Label>
                 </div>
@@ -168,32 +185,15 @@ export default function LoginPage() {
                   "Sign In"
                 )}
               </Button>
-              
             </form>
-
-            {/* Demo Accounts */}
-            <div className="mt-6 p-4 bg-cvision-container rounded-lg border border-border">
-              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
-                Demo Accounts (password: 123456)
-              </p>
-              <div className="space-y-1.5">
-                {MOCK_USERS.map((u) => (
-                  <p key={u.email} className="text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground capitalize">
-                      {u.role}:
-                    </span>{" "}
-                    {u.email}
-                  </p>
-                ))}
-              </div>
-            </div>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
               <p>Don&apos;t have an account?</p>
               <Link
                 href="/register/candidate"
-                className="block mt-2 text-cvision-green hover:underline font-medium">
-                Register as condidate
+                className="block mt-2 text-cvision-green hover:underline font-medium"
+              >
+                Register as candidate
               </Link>
               <Link
                 href="/register/company"

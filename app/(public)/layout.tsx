@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s | CVision",
   },
   description:
-    "CVision connects job seekers with verified companies across Algeria's 58 wilayas using AI-powered matching.",
+    "CVision connects job seekers with verified companies across Algeria's 69 wilayas using AI-powered matching.",
 };
 
 export default function PublicLayout({

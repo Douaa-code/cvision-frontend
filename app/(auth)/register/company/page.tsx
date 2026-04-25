@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,9 +36,10 @@ import {
   X,
   Info,
 } from "lucide-react";
-import { WILAYAS, getPostalCodeByWilaya } from "@/lib/constants/wilayas";
+import { WILAYAS, getWilayaCode } from "@/lib/constants/wilayas";
 import { DomainEnum } from "@/types/enums";
 import { ArrowLeft } from "lucide-react";
+import { authApi } from "@/lib/api/auth";
 
 // Step 1 schema
 const step1Schema = z.object({
@@ -49,8 +49,16 @@ const step1Schema = z.object({
   phoneNumber: z.string().min(9, "Please enter a valid phone number"),
   website: z.string().optional(),
   wilaya: z.string().min(1, "Please select a wilaya"),
-  postalCode: z.string().min(1, "Postal code is required"),
+  postalCode: z.string().min(5, "Postal code must be 5 digits"),
+  streetAddress: z.string().optional(),
   description: z.string().min(20, "Description must be at least 20 characters"),
+}).refine((data) => {
+  const wilayaEntry = WILAYAS.find((w) => w.name === data.wilaya);
+  if (!wilayaEntry) return true;
+  return data.postalCode.startsWith(wilayaEntry.code);
+}, {
+  message: "Postal code must start with your wilaya code",
+  path: ["postalCode"],
 });
 
 // Step 3 schema
@@ -78,7 +86,6 @@ const STEPS = [
 
 
 export default function CompanyRegisterPage() {
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,6 +95,9 @@ export default function CompanyRegisterPage() {
     additional: File[];
   }>({ rc: null, nif: null, additional: [] });
   const [docError, setDocError] = useState("");
+  const [serverError, setServerError] = useState("");
+  const [postalPrefix, setPostalPrefix] = useState("");
+  const [postalSuffix, setPostalSuffix] = useState("");
 
   // Step 1 form
   const step1Form = useForm<Step1Data>({
@@ -102,8 +112,16 @@ export default function CompanyRegisterPage() {
 
   const handleWilayaChange = (value: string) => {
     step1Form.setValue("wilaya", value);
-    const postal = getPostalCodeByWilaya(value);
-    if (postal) step1Form.setValue("postalCode", postal);
+    const code = getWilayaCode(value) ?? "";
+    setPostalPrefix(code);
+    setPostalSuffix("000");
+    step1Form.setValue("postalCode", code + "000");
+  };
+
+  const handlePostalSuffixChange = (val: string) => {
+    const digits = val.replace(/\D/g, "").slice(0, 3);
+    setPostalSuffix(digits);
+    step1Form.setValue("postalCode", postalPrefix + digits);
   };
 
   const handleFileChange = (
@@ -150,10 +168,39 @@ export default function CompanyRegisterPage() {
     setCurrentStep(step);
   };
 
-  const onSubmit = async (_data: Step3Data) => {
+  const onSubmit = async (data: Step3Data) => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    router.push("/login");
+    setServerError("");
+    const s1 = step1Form.getValues();
+    try {
+      const formData = new FormData();
+      formData.append("name", data.adminFullName);
+      formData.append("email", data.adminEmail);
+      formData.append("password", data.password);
+      formData.append("password_confirmation", data.confirmPassword);
+      formData.append("company_name", s1.companyName);
+      formData.append("domain", s1.activityDomain);
+      formData.append("professional_email", s1.professionalEmail);
+      formData.append("phone", s1.phoneNumber);
+      if (s1.website) formData.append("website", s1.website);
+      formData.append("wilaya", s1.wilaya);
+      formData.append("postal_code", s1.postalCode);
+      formData.append("street_address", s1.streetAddress ?? "");
+      formData.append("description", s1.description);
+      formData.append("terms_accepted", "1");
+      if (documents.rc) formData.append("rc_document", documents.rc);
+      if (documents.nif) formData.append("nif_document", documents.nif);
+      documents.additional.forEach((file) => {
+        formData.append("additional_documents[]", file);
+      });
+
+      await authApi.registerCompany(formData);
+      setCurrentStep(3); // success screen
+    } catch (err: unknown) {
+      setServerError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const stepVariants = {
@@ -319,13 +366,21 @@ export default function CompanyRegisterPage() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="postalCode">Postal Code</Label>
-                        <Input
-                          id="postalCode"
-                          placeholder="16000"
-                          {...step1Form.register("postalCode")}
-                          className={step1Form.formState.errors.postalCode ? "border-cvision-red" : ""}
-                        />
+                        <Label htmlFor="postalSuffix">Postal Code</Label>
+                        <div className={`flex rounded-md border overflow-hidden ${step1Form.formState.errors.postalCode ? "border-cvision-red" : "border-input"}`}>
+                          <span className="flex items-center px-3 bg-muted text-sm font-mono border-r border-input text-muted-foreground select-none min-w-[2.75rem] justify-center">
+                            {postalPrefix || "—"}
+                          </span>
+                          <input
+                            id="postalSuffix"
+                            value={postalSuffix}
+                            onChange={(e) => handlePostalSuffixChange(e.target.value)}
+                            maxLength={3}
+                            placeholder="000"
+                            disabled={!postalPrefix}
+                            className="flex-1 px-3 py-2 text-sm bg-transparent outline-none font-mono placeholder:text-muted-foreground disabled:opacity-50"
+                          />
+                        </div>
                         {step1Form.formState.errors.postalCode && (
                           <p className="text-xs text-cvision-red">{step1Form.formState.errors.postalCode.message}</p>
                         )}
@@ -334,7 +389,8 @@ export default function CompanyRegisterPage() {
                         <Label htmlFor="streetAddress">Street Address</Label>
                         <Input
                           id="streetAddress"
-                          placeholder="Enter street address"
+                          placeholder="e.g. 12 Rue Didouche Mourad"
+                          {...step1Form.register("streetAddress")}
                         />
                       </div>
                     </div>
@@ -607,6 +663,11 @@ export default function CompanyRegisterPage() {
                       <p className="text-xs text-cvision-red">{step3Form.formState.errors.termsAccepted.message}</p>
                     )}
 
+                    {serverError && (
+                      <div className="bg-cvision-red-bg text-cvision-red text-sm p-3 rounded-lg">
+                        {serverError}
+                      </div>
+                    )}
                     <div className="flex gap-3 pt-2">
                       <Button
                         type="button"

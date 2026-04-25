@@ -1,10 +1,35 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSettingsStore } from "@/lib/stores/settingsStore";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api";
+const DEFAULT_FOOTER = "© 2026 CVision. All rights reserved.";
 
 export function Footer() {
-  const { footerText } = useSettingsStore();
+  const [footerText, setFooterText] = useState(DEFAULT_FOOTER);
+
+  useEffect(() => {
+    const fetchSettings = () => {
+      fetch(`${API_URL}/settings`, { headers: { Accept: "application/json" } })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.footerText) {
+            setFooterText(data.footerText);
+          }
+        })
+        .catch(console.error);
+    };
+
+    fetchSettings();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchSettings();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
   return (
     <footer className="bg-white border-t border-border text-foreground">
       <div className="max-w-[1280px] mx-auto px-4 py-8 sm:py-12">
@@ -30,18 +55,17 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/about"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="/about" className="hover:text-foreground transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/login"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="/terms" className="hover:text-foreground transition-colors">
+                  Terms & Rules
+                </Link>
+              </li>
+              <li>
+                <Link href="/login" className="hover:text-foreground transition-colors">
                   Login
                 </Link>
               </li>
@@ -53,10 +77,7 @@ export function Footer() {
             <h4 className="font-semibold mb-3 text-foreground">For Job Seekers</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link
-                  href="/register/candidate"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="/register/candidate" className="hover:text-foreground transition-colors">
                   Register as Candidate
                 </Link>
               </li>
@@ -68,10 +89,7 @@ export function Footer() {
             <h4 className="font-semibold mb-3 text-foreground">For Employers</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link
-                  href="/register/company"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="/register/company" className="hover:text-foreground transition-colors">
                   Register as Company
                 </Link>
               </li>
