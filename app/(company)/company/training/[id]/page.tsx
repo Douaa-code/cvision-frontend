@@ -59,10 +59,18 @@ type ModuleContent = {
   name?: string;
 };
 
+/// ✅ Type Guard
+function isModuleContent(content: unknown): content is ModuleContent {
+  return typeof content === "object" && content !== null;
+}
+
 function ModuleCard({ module }: { module: ApiTrainingModule }) {
   const Icon = moduleIcons[module.type] ?? FileText;
   const label = moduleLabels[module.type] ?? module.type;
-  const content = module.content as ModuleContent | null;
+
+  const content = isModuleContent(module.content)
+    ? module.content
+    : null;
 
   return (
     <div className="rounded-lg border border-border bg-cvision-container overflow-hidden">
@@ -80,7 +88,7 @@ function ModuleCard({ module }: { module: ApiTrainingModule }) {
         )}
       </div>
 
-      {/* Video URL */}
+      {/* Video */}
       {module.type === "video" && content?.url && (
         <div className="p-3">
           <a
@@ -95,7 +103,7 @@ function ModuleCard({ module }: { module: ApiTrainingModule }) {
         </div>
       )}
 
-      {/* Text content */}
+      {/* Text */}
       {module.type === "text" && content?.body && (
         <div className="p-3">
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
@@ -104,7 +112,7 @@ function ModuleCard({ module }: { module: ApiTrainingModule }) {
         </div>
       )}
 
-      {/* Quiz questions count */}
+      {/* Quiz */}
       {module.type === "mcq_quiz" && content?.questions && (
         <div className="p-3">
           <p className="text-xs text-muted-foreground">
@@ -140,6 +148,7 @@ export default function TrainingDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+
   const [training, setTraining] =
     useState<ApiCompanyTrainingDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -207,120 +216,29 @@ export default function TrainingDetailPage({
 
       <Card className="mb-6">
         <CardContent className="p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold mb-1">
-                {training.title}
-              </h1>
-              {training.description && (
-                <p className="text-sm text-muted-foreground mb-4">
-                  {training.description}
-                </p>
-              )}
+          <h1 className="text-2xl font-bold mb-2">{training.title}</h1>
+          <p className="text-sm text-muted-foreground mb-4">
+            {training.description}
+          </p>
 
-              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                {training.job_offer && (
-                  <>
-                    <span className="flex items-center gap-1.5">
-                      <Briefcase className="w-4 h-4" />
-                      {training.job_offer.title}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Tag className="w-4 h-4" />
-                      {training.job_offer.domain}
-                    </span>
-                  </>
-                )}
-
-                <span className="flex items-center gap-1.5">
-                  <BookOpen className="w-4 h-4" />
-                  {training.modules.length} modules
-                </span>
-
-                <span className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" />
-                  {totalHours} total
-                </span>
-
-                <span className="flex items-center gap-1.5">
-                  <Users className="w-4 h-4" />
-                  {training.enrolled_count} enrolled
-                </span>
-              </div>
-            </div>
-
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Remove Training
-            </Button>
+          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+            <span>{training.modules.length} modules</span>
+            <span>{totalHours}</span>
+            <span>{training.enrolled_count} enrolled</span>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="p-6">
-          <h2 className="font-semibold text-lg mb-4">
-            Modules ({training.modules.length})
-          </h2>
-
-          {training.modules.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No modules in this training.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {training.modules
-                .sort((a, b) => a.order - b.order)
-                .map((module, i) => (
-                  <div key={module.id}>
-                    {i > 0 && <Separator className="mb-3" />}
-                    <div className="flex items-start gap-3">
-                      <span className="text-xs text-muted-foreground font-mono mt-2.5 w-5 text-right">
-                        {i + 1}
-                      </span>
-                      <div className="flex-1">
-                        <ModuleCard module={module} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
+        <CardContent className="p-6 space-y-3">
+          {training.modules.map((module, i) => (
+            <div key={module.id}>
+              {i > 0 && <Separator />}
+              <ModuleCard module={module} />
             </div>
-          )}
+          ))}
         </CardContent>
       </Card>
-
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Remove Training</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to remove “{training.title}”? This action
-              cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
-              Cancel
-            </Button>
-
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? "Removing…" : "Remove Training"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </motion.div>
   );
 }
