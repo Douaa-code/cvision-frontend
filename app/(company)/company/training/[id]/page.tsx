@@ -29,7 +29,11 @@ import {
   Image,
   Paperclip,
 } from "lucide-react";
-import { trainingsApi, type ApiCompanyTrainingDetail, type ApiTrainingModule } from "@/lib/api/trainings";
+import {
+  trainingsApi,
+  type ApiCompanyTrainingDetail,
+  type ApiTrainingModule,
+} from "@/lib/api/trainings";
 
 const moduleIcons: Record<string, React.ElementType> = {
   video: PlayCircle,
@@ -47,10 +51,18 @@ const moduleLabels: Record<string, string> = {
   file: "File",
 };
 
+type ModuleContent = {
+  url?: string;
+  body?: string;
+  questions?: any[];
+  passing_score?: number;
+  name?: string;
+};
+
 function ModuleCard({ module }: { module: ApiTrainingModule }) {
   const Icon = moduleIcons[module.type] ?? FileText;
   const label = moduleLabels[module.type] ?? module.type;
-  const content = module.content as Record<string, unknown> | null;
+  const content = module.content as ModuleContent | null;
 
   return (
     <div className="rounded-lg border border-border bg-cvision-container overflow-hidden">
@@ -72,7 +84,7 @@ function ModuleCard({ module }: { module: ApiTrainingModule }) {
       {module.type === "video" && content?.url && (
         <div className="p-3">
           <a
-            href={content.url as string}
+            href={content.url}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm text-cvision-green hover:underline font-medium"
@@ -87,7 +99,7 @@ function ModuleCard({ module }: { module: ApiTrainingModule }) {
       {module.type === "text" && content?.body && (
         <div className="p-3">
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-            {content.body as string}
+            {content.body}
           </p>
         </div>
       )}
@@ -96,25 +108,27 @@ function ModuleCard({ module }: { module: ApiTrainingModule }) {
       {module.type === "mcq_quiz" && content?.questions && (
         <div className="p-3">
           <p className="text-xs text-muted-foreground">
-            {(content.questions as unknown[]).length} question(s) · Passing score: {(content.passing_score as number) ?? 70}%
+            {content.questions.length} question(s) · Passing score:{" "}
+            {content.passing_score ?? 70}%
           </p>
         </div>
       )}
 
-      {/* File link */}
-      {(module.type === "file" || module.type === "image") && content?.url && (
-        <div className="p-3">
-          <a
-            href={content.url as string}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-cvision-green hover:underline font-medium"
-          >
-            <Paperclip className="w-4 h-4" />
-            {content.name as string ?? "View File"}
-          </a>
-        </div>
-      )}
+      {/* File / Image */}
+      {(module.type === "file" || module.type === "image") &&
+        content?.url && (
+          <div className="p-3">
+            <a
+              href={content.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-cvision-green hover:underline font-medium"
+            >
+              <Paperclip className="w-4 h-4" />
+              {content.name ?? "View File"}
+            </a>
+          </div>
+        )}
     </div>
   );
 }
@@ -126,7 +140,8 @@ export default function TrainingDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const [training, setTraining] = useState<ApiCompanyTrainingDetail | null>(null);
+  const [training, setTraining] =
+    useState<ApiCompanyTrainingDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -164,16 +179,21 @@ export default function TrainingDetailPage({
       <div className="text-center py-12">
         <p className="text-muted-foreground">Training not found.</p>
         <Link href="/company/training">
-          <Button variant="outline" className="mt-4">Back to Training</Button>
+          <Button variant="outline" className="mt-4">
+            Back to Training
+          </Button>
         </Link>
       </div>
     );
   }
 
   const totalMinutes = training.total_duration;
-  const totalHours = totalMinutes >= 60
-    ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60 > 0 ? `${totalMinutes % 60}m` : ""}`.trim()
-    : `${totalMinutes}m`;
+  const totalHours =
+    totalMinutes >= 60
+      ? `${Math.floor(totalMinutes / 60)}h ${
+          totalMinutes % 60 > 0 ? `${totalMinutes % 60}m` : ""
+        }`.trim()
+      : `${totalMinutes}m`;
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -185,17 +205,19 @@ export default function TrainingDetailPage({
         Back to Training
       </Link>
 
-      {/* Header card */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold mb-1">{training.title}</h1>
+              <h1 className="text-2xl font-bold mb-1">
+                {training.title}
+              </h1>
               {training.description && (
                 <p className="text-sm text-muted-foreground mb-4">
                   {training.description}
                 </p>
               )}
+
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 {training.job_offer && (
                   <>
@@ -209,24 +231,27 @@ export default function TrainingDetailPage({
                     </span>
                   </>
                 )}
+
                 <span className="flex items-center gap-1.5">
                   <BookOpen className="w-4 h-4" />
                   {training.modules.length} modules
                 </span>
+
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
                   {totalHours} total
                 </span>
+
                 <span className="flex items-center gap-1.5">
                   <Users className="w-4 h-4" />
                   {training.enrolled_count} enrolled
                 </span>
               </div>
             </div>
+
             <Button
               variant="destructive"
               size="sm"
-              className="shrink-0"
               onClick={() => setShowDeleteDialog(true)}
             >
               <Trash2 className="w-4 h-4 mr-2" />
@@ -236,12 +261,12 @@ export default function TrainingDetailPage({
         </CardContent>
       </Card>
 
-      {/* Modules */}
       <Card>
         <CardContent className="p-6">
           <h2 className="font-semibold text-lg mb-4">
             Modules ({training.modules.length})
           </h2>
+
           {training.modules.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               No modules in this training.
@@ -254,7 +279,7 @@ export default function TrainingDetailPage({
                   <div key={module.id}>
                     {i > 0 && <Separator className="mb-3" />}
                     <div className="flex items-start gap-3">
-                      <span className="text-xs text-muted-foreground font-mono mt-2.5 w-5 shrink-0 text-right">
+                      <span className="text-xs text-muted-foreground font-mono mt-2.5 w-5 text-right">
                         {i + 1}
                       </span>
                       <div className="flex-1">
@@ -268,20 +293,29 @@ export default function TrainingDetailPage({
         </CardContent>
       </Card>
 
-      {/* Delete confirmation dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Remove Training</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove &ldquo;{training.title}&rdquo;? This action cannot be undone.
+              Are you sure you want to remove “{training.title}”? This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
               {deleting ? "Removing…" : "Remove Training"}
             </Button>
           </DialogFooter>
